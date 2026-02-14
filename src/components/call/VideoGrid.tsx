@@ -40,7 +40,7 @@ export default function VideoGrid({ localStream, remoteEntries, myLabel }: Video
     <section className="video-grid">
       <VideoTile stream={localStream} muted label={`${myLabel} (You)`} />
       {remoteEntries.map(([userId, stream]) => (
-        <VideoTile key={userId} stream={stream} muted label={userId} />
+        <VideoTile key={userId} stream={stream} label={userId} />
       ))}
     </section>
   );
