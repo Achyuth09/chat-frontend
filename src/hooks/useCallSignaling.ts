@@ -14,9 +14,11 @@ type SignalHandler = (payload: any) => void;
 export function useCallSignaling({ token, user, roomId }: UseCallSignalingArgs) {
   const socketRef = useRef<Socket | null>(null);
   const [participants, setParticipants] = useState<string[]>([]);
+  const [callEnded, setCallEnded] = useState(false);
 
   useEffect(() => {
     if (!token || !user || !roomId) return;
+    setCallEnded(false);
     const socket = io(SOCKET_URL, { auth: { token } });
     socketRef.current = socket;
 
@@ -37,6 +39,7 @@ export function useCallSignaling({ token, user, roomId }: UseCallSignalingArgs) 
     });
     socket.on('call_ended', () => {
       setParticipants([]);
+      setCallEnded(true);
     });
 
     return () => {
@@ -67,5 +70,5 @@ export function useCallSignaling({ token, user, roomId }: UseCallSignalingArgs) 
     [roomId]
   );
 
-  return { participants, signaling };
+  return { participants, signaling, callEnded };
 }

@@ -859,10 +859,22 @@ body {
 .video-grid {
   display: grid;
   gap: 0.8rem;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   padding: 1rem;
   overflow-y: auto;
   flex: 1;
+}
+
+.enable-audio-btn {
+  grid-column: 1 / -1;
+  justify-self: start;
+  border: 0;
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  background: #22c55e;
+  color: #07130b;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .video-tile {
@@ -870,11 +882,12 @@ body {
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
+  position: relative;
 }
 
 .video-tile video {
   width: 100%;
-  height: 190px;
+  height: 260px;
   object-fit: cover;
   background: #000;
 }
@@ -884,6 +897,24 @@ body {
   padding: 0.45rem 0.6rem;
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+.tile-badges {
+  position: absolute;
+  left: 0.55rem;
+  top: 0.55rem;
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.tile-badge {
+  background: rgba(15, 17, 23, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 0.72rem;
+  border-radius: 999px;
+  padding: 0.18rem 0.45rem;
 }
 
 .call-controls {
@@ -1026,7 +1057,7 @@ body {
   }
 
   .video-tile video {
-    height: 170px;
+    height: 240px;
   }
 
   .call-controls {

@@ -33,6 +33,7 @@ export default function App() {
     from?: { id?: string; username?: string };
   } | null>(null);
   const callNotifySocketRef = useRef<Socket | null>(null);
+  const ringIntervalRef = useRef<number | null>(null);
 
   const inMessages = location.pathname.startsWith('/messages');
   const { user, token, authMode, setAuthMode, authError, setAuthError, status, handleAuth, logout } =
@@ -151,6 +152,51 @@ export default function App() {
       callNotifySocketRef.current = null;
     };
   }, [token, user, location.pathname]);
+
+  useEffect(() => {
+    function playRingTone() {
+      const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.38);
+      window.setTimeout(() => {
+        ctx.close().catch(() => {
+          // ignore
+        });
+      }, 500);
+    }
+
+    if (!incomingCall) {
+      if (ringIntervalRef.current) {
+        window.clearInterval(ringIntervalRef.current);
+        ringIntervalRef.current = null;
+      }
+      if ('vibrate' in navigator) navigator.vibrate(0);
+      return;
+    }
+
+    playRingTone();
+    ringIntervalRef.current = window.setInterval(playRingTone, 1500);
+    if ('vibrate' in navigator) navigator.vibrate([200, 120, 200]);
+
+    return () => {
+      if (ringIntervalRef.current) {
+        window.clearInterval(ringIntervalRef.current);
+        ringIntervalRef.current = null;
+      }
+      if ('vibrate' in navigator) navigator.vibrate(0);
+    };
+  }, [incomingCall]);
 
   async function onAddMember(e: FormEvent<HTMLFormElement>) {
     const updated = await handleAddMember(e, selectedGroup);
@@ -292,7 +338,7 @@ export default function App() {
         <Route path="/feed" element={<FeedPage makeHeaders={makeHeaders} />} />
         <Route path="/requests" element={<RequestsPage />} />
         <Route path="/profile" element={<ProfilePage user={user} onLogout={handleLogout} />} />
-        <Route path="/call/:callRoomId" element={<CallPage token={token} user={user} />} />
+        <Route path="/call/:callRoomId" element={<CallPage token={token} user={user} users={users} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {incomingCall && (
@@ -310,7 +356,7 @@ export default function App() {
           </div>
         </div>
       )}
-      <BottomNav />
+      {!location.pathname.startsWith('/call/') && <BottomNav />}
     </div>
   );
 }
