@@ -56,6 +56,22 @@ export default function CallPage({ token, user, users }: CallPageProps) {
     navigate('/messages');
   }
 
+  async function enterMiniView() {
+    try {
+      const firstVideo = document.querySelector('.video-grid video') as HTMLVideoElement | null;
+      if (!firstVideo) return;
+      if ('pictureInPictureElement' in document && document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        return;
+      }
+      if ('requestPictureInPicture' in firstVideo) {
+        await firstVideo.requestPictureInPicture();
+      }
+    } catch {
+      // Ignore PiP failures (unsupported browser or gesture restrictions).
+    }
+  }
+
   useEffect(() => {
     if (!callEnded) return;
     navigate('/messages');
@@ -76,6 +92,7 @@ export default function CallPage({ token, user, users }: CallPageProps) {
       <CallControls
         micEnabled={micEnabled}
         cameraEnabled={cameraEnabled}
+        onMiniView={enterMiniView}
         onToggleMic={toggleMic}
         onToggleCamera={toggleCamera}
         onEndCall={endCall}

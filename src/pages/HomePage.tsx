@@ -1,30 +1,70 @@
 import type { FormEvent } from 'react';
 import Avatar from '../components/Avatar';
 import type { ChatUser, Group } from '../types';
+import { useEffect, useState } from 'react';
+import { API } from '../lib/config';
+import type { FeedPost } from '../types';
+import PostCard from '../components/feed/PostCard';
 
 interface HomePageProps {
+  makeHeaders: (extra?: Record<string, string>) => Record<string, string>;
   user: ChatUser;
-  groups: Group[];
-  users: ChatUser[];
-  homeError: string;
-  newGroupName: string;
-  setNewGroupName: (value: string) => void;
-  onCreateGroup: (e: FormEvent<HTMLFormElement>) => void;
-  onOpenGroup: (group: Group) => void;
-  onOpenDm: (user: ChatUser) => void;
 }
 
 export default function HomePage({
-  user,
-  groups,
-  users,
-  homeError,
-  newGroupName,
-  setNewGroupName,
-  onCreateGroup,
-  onOpenGroup,
-  onOpenDm,
+  makeHeaders,
+  user
 }: HomePageProps) {
+
+  const [posts, setPosts] = useState<FeedPost[]>([]);
+  const [error, setError] = useState('');
+
+  async function fetchFeed() {
+    setError('');
+    try {
+      const res = await fetch(`${API}/posts`, { headers: makeHeaders() });
+      const data = await res.json();
+      setPosts(Array.isArray(data.items) ? (data.items as FeedPost[]) : []);
+    } catch {
+      setError('Failed to load feed');
+    }
+  }
+  async function toggleLike(postId: string) {
+    try {
+      const res = await fetch(`${API}/posts/${postId}/like`, {
+        method: 'POST',
+        headers: makeHeaders(),
+      });
+      const data = await res.json();
+      if (data.error) return null;
+      return { likesCount: Number(data.likesCount || 0), likedByMe: Boolean(data.likedByMe) };
+    } catch {
+      return null;
+    }
+  }
+  async function addComment(postId: string, text: string) {
+    const res = await fetch(`${API}/posts/${postId}/comments`, {
+      method: 'POST',
+      headers: makeHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ text }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id !== postId
+          ? p
+          : {
+              ...p,
+              commentsCount: data.commentsCount || p.commentsCount + 1,
+              comments: [...p.comments, data.comment],
+            }
+      )
+    );
+  }
+  useEffect(() => {
+    fetchFeed();
+  }, []);
   return (
     <div className="app home-view">
       <header className="home-header">
@@ -34,57 +74,11 @@ export default function HomePage({
         </div>
       </header>
 
-      <div className="home-feed">
-        <section className="home-card">
-          <h2>Create Group</h2>
-          <form onSubmit={onCreateGroup} className="stack-form">
-            <input
-              type="text"
-              placeholder="Group name"
-              value={newGroupName}
-              onChange={(e) => setNewGroupName(e.target.value)}
-            />
-            <button type="submit">Create</button>
-          </form>
-        </section>
+      {posts.map((post) => (
+          <PostCard key={post.id} post={post} onToggleLike={toggleLike} onAddComment={addComment} />
+        ))}
 
-        <section className="home-card">
-          <h2>Groups</h2>
-          <ul className="users-list">
-            {groups.length === 0 && <li className="users-empty">No groups yet</li>}
-            {groups.map((g) => (
-              <li key={g.id}>
-                <button type="button" onClick={() => onOpenGroup(g)} className="list-item-btn">
-                  <Avatar label={g.name} />
-                  <span className="list-item-main">
-                    <strong>{g.name}</strong>
-                    {g.admins?.includes(user.id) && <small>admin</small>}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="home-card">
-          <h2>Direct Messages</h2>
-          <ul className="users-list">
-            {users.length === 0 && <li className="users-empty">No other users yet</li>}
-            {users.map((u) => (
-              <li key={u.id}>
-                <button type="button" onClick={() => onOpenDm(u)} className="list-item-btn">
-                  <Avatar label={u.username} />
-                  <span className="list-item-main">
-                    <strong>{u.username}</strong>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      {homeError && <p className="home-error">{homeError}</p>}
+      {error && <p className="home-error">{error}</p>}
     </div>
   );
 }

@@ -266,18 +266,11 @@ export default function App() {
     <div className="app-shell">
       <Routes>
         <Route
-          path="/"
+          path="/home"
           element={
             <HomePage
-              user={user}
-              groups={groups}
-              users={users}
-              homeError={homeError}
-              newGroupName={newGroupName}
-              setNewGroupName={(value) => setNewGroupName(value)}
-              onCreateGroup={handleCreateGroup}
-              onOpenGroup={openGroup}
-              onOpenDm={openDm}
+            user={user}
+             makeHeaders={makeHeaders}
             />
           }
         />
@@ -339,7 +332,7 @@ export default function App() {
         <Route path="/requests" element={<RequestsPage />} />
         <Route path="/profile" element={<ProfilePage user={user} onLogout={handleLogout} />} />
         <Route path="/call/:callRoomId" element={<CallPage token={token} user={user} users={users} />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
       {incomingCall && (
         <div className="incoming-call-banner">

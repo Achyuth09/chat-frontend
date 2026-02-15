@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface VideoTileProps {
   stream: MediaStream | null;
@@ -60,19 +60,8 @@ export default function VideoGrid({
   localMicEnabled,
   localCameraEnabled,
 }: VideoGridProps) {
-  const [remoteAudioEnabled, setRemoteAudioEnabled] = useState(false);
-
   return (
     <section className="video-grid">
-      {remoteEntries.length > 0 && (
-        <button
-          type="button"
-          className="enable-audio-btn"
-          onClick={() => setRemoteAudioEnabled((prev) => !prev)}
-        >
-          {remoteAudioEnabled ? 'Mute Remote Audio' : 'Enable Remote Audio'}
-        </button>
-      )}
       <VideoTile
         stream={localStream}
         muted
@@ -85,7 +74,7 @@ export default function VideoGrid({
         <VideoTile
           key={entry.id}
           stream={entry.stream}
-          muted={!remoteAudioEnabled}
+          muted={false}
           label={entry.label}
         />
       ))}
