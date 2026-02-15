@@ -19,6 +19,8 @@ export function useWebRTC({ user, participants, signaling }: UseWebRTCArgs) {
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
   const peersRef = useRef<Record<string, RTCPeerConnection>>({});
   const reinitInFlightRef = useRef(false);
+  const pendingOffersRef = useRef<Record<string, any>>({});
+  const pendingCandidatesRef = useRef<Record<string, RTCIceCandidateInit[]>>({});
 
   async function replaceLocalStream(nextStream: MediaStream) {
     const peers = Object.values(peersRef.current);
@@ -114,6 +116,17 @@ export function useWebRTC({ user, participants, signaling }: UseWebRTCArgs) {
       }
     };
     peersRef.current[remoteUserId] = pc;
+    const queuedCandidates = pendingCandidatesRef.current[remoteUserId] || [];
+    if (queuedCandidates.length) {
+      for (const candidate of queuedCandidates) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch {
+          // Ignore malformed/late ICE candidates.
+        }
+      }
+      delete pendingCandidatesRef.current[remoteUserId];
+    }
     return pc;
   }
 
@@ -131,16 +144,29 @@ export function useWebRTC({ user, participants, signaling }: UseWebRTCArgs) {
   }, [participants, localStream, user]);
 
   useEffect(() => {
-    const handleOffer = async (payload: any) => {
-      if (!user) return;
+    async function processOffer(payload: any) {
+      if (!user || !localStream) return;
       if (payload?.targetUserId !== user.id) return;
       const remoteUserId = payload.fromUserId;
+      if (!remoteUserId || !payload?.sdp) return;
       const pc = await ensurePeer(remoteUserId);
       if (!pc) return;
       await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       signaling.emitAnswer(remoteUserId, answer);
+    }
+
+    const handleOffer = async (payload: any) => {
+      if (!user) return;
+      if (payload?.targetUserId !== user.id) return;
+      const remoteUserId = payload.fromUserId;
+      if (!remoteUserId || !payload?.sdp) return;
+      if (!localStream) {
+        pendingOffersRef.current[remoteUserId] = payload;
+        return;
+      }
+      await processOffer(payload);
     };
 
     const handleAnswer = async (payload: any) => {
@@ -154,9 +180,16 @@ export function useWebRTC({ user, participants, signaling }: UseWebRTCArgs) {
     const handleCandidate = async (payload: any) => {
       if (!user) return;
       if (payload?.targetUserId !== user.id) return;
-      const pc = peersRef.current[payload.fromUserId];
-      if (!pc) return;
-      await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+      const fromUserId = payload.fromUserId;
+      const candidate = payload?.candidate;
+      if (!fromUserId || !candidate) return;
+      const pc = peersRef.current[fromUserId];
+      if (!pc) {
+        const existing = pendingCandidatesRef.current[fromUserId] || [];
+        pendingCandidatesRef.current[fromUserId] = [...existing, candidate];
+        return;
+      }
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
     };
 
     signaling.on('webrtc_offer', handleOffer);
@@ -170,9 +203,33 @@ export function useWebRTC({ user, participants, signaling }: UseWebRTCArgs) {
   }, [signaling, user, localStream]);
 
   useEffect(() => {
+    if (!user || !localStream) return;
+    const queued = Object.values(pendingOffersRef.current);
+    if (!queued.length) return;
+    queued.forEach(async (payload) => {
+      if (payload?.targetUserId !== user.id) return;
+      const remoteUserId = payload?.fromUserId;
+      if (!remoteUserId || !payload?.sdp) return;
+      try {
+        const pc = await ensurePeer(remoteUserId);
+        if (!pc) return;
+        await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        signaling.emitAnswer(remoteUserId, answer);
+        delete pendingOffersRef.current[remoteUserId];
+      } catch {
+        // keep queued; next participant/local-stream update may recover
+      }
+    });
+  }, [localStream, user, participants, signaling]);
+
+  useEffect(() => {
     return () => {
       Object.values(peersRef.current).forEach((pc) => pc.close());
       peersRef.current = {};
+      pendingOffersRef.current = {};
+      pendingCandidatesRef.current = {};
       if (localStream) localStream.getTracks().forEach((t) => t.stop());
     };
   }, [localStream]);

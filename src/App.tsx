@@ -13,7 +13,7 @@ import CallPage from './pages/CallPage';
 import MessagesInboxPage from './pages/MessagesInboxPage';
 import NotificationsPage from './pages/NotificationsPage';
 import BottomNav from './components/BottomNav';
-import type { AppNotification, ChatUser, FriendRequest, Group } from './types';
+import type { AppNotification, ChatUser, FriendRequest, Group, SentFriendRequest } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useGroups } from './hooks/useGroups';
 import { useMessages } from './hooks/useMessages';
@@ -77,6 +77,7 @@ export default function App() {
     handleCreateGroup,
     handleAddMember,
     removeMember,
+    refreshHomeData,
     clearGroupInputs,
   } = useGroups({ token, user, makeHeaders });
   const {
@@ -288,13 +289,15 @@ export default function App() {
     let mounted = true;
     async function loadActivitySummary() {
       try {
-        const [notificationsRes, requestsRes] = await Promise.all([
+        const [notificationsRes, requestsRes, sentRequestsRes] = await Promise.all([
           fetch(`${API}/notifications`, { headers: makeHeaders() }),
           fetch(`${API}/friend-requests`, { headers: makeHeaders() }),
+          fetch(`${API}/friend-requests/sent`, { headers: makeHeaders() }),
         ]);
-        const [notificationsData, requestsData] = await Promise.all([
+        const [notificationsData, requestsData, sentRequestsData] = await Promise.all([
           notificationsRes.json(),
           requestsRes.json(),
+          sentRequestsRes.json(),
         ]);
         if (!mounted) return;
         const items = Array.isArray(notificationsData?.items)
@@ -303,6 +306,13 @@ export default function App() {
         setGlobalNotifications(items.slice(0, 6));
         setNotificationsUnread(Number(notificationsData?.unreadCount || 0));
         setGlobalRequests(Array.isArray(requestsData) ? (requestsData as FriendRequest[]) : []);
+        const sent = Array.isArray(sentRequestsData) ? (sentRequestsData as SentFriendRequest[]) : [];
+        setGlobalRequestedIds(
+          sent.reduce<Record<string, boolean>>((acc, item) => {
+            if (item?.to?.id) acc[item.to.id] = true;
+            return acc;
+          }, {})
+        );
       } catch {
         if (!mounted) return;
       }
@@ -343,7 +353,7 @@ export default function App() {
   }, [globalSearch, token, user, makeHeaders]);
 
   async function sendGlobalFriendRequest(to: string) {
-    if (globalRequestedIds[to]) return;
+    if (globalRequestedIds[to] || users.some((u) => u.id === to)) return;
     setGlobalSendingTo(to);
     setGlobalSearchError('');
     try {
@@ -373,6 +383,7 @@ export default function App() {
       });
       if (!res.ok) return;
       setGlobalRequests((prev) => prev.filter((r) => r.id !== id));
+      await refreshHomeData();
     } catch {
       // ignore
     }
@@ -658,14 +669,23 @@ export default function App() {
                           <small>@{u.username}</small>
                         </span>
                       </span>
-                      <button
-                        type="button"
-                        className={`search-add-btn${globalRequestedIds[u.id] ? ' sent' : ''}`}
-                        onClick={() => sendGlobalFriendRequest(u.id)}
-                        disabled={globalSendingTo === u.id || globalRequestedIds[u.id]}
-                      >
-                        {globalRequestedIds[u.id] ? 'Requested' : globalSendingTo === u.id ? 'Sending...' : 'Add'}
-                      </button>
+                      {(() => {
+                        const isFriend = users.some((friend) => friend.id === u.id);
+                        const isRequested = Boolean(globalRequestedIds[u.id]);
+                        const isSending = globalSendingTo === u.id;
+                        const disabled = isFriend || isRequested || isSending;
+                        const label = isFriend ? 'Friends' : isRequested ? 'Requested' : isSending ? 'Sending...' : 'Add';
+                        return (
+                          <button
+                            type="button"
+                            className={`search-add-btn${isFriend || isRequested ? ' sent' : ''}`}
+                            onClick={() => sendGlobalFriendRequest(u.id)}
+                            disabled={disabled}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })()}
                     </li>
                   ))}
                 </ul>

@@ -36,6 +36,10 @@ export function useCallSignaling({ token, user, roomId }: UseCallSignalingArgs) 
     socket.on('call_left', (payload: { userId?: string }) => {
       if (!payload?.userId) return;
       setParticipants((prev) => prev.filter((id) => id !== payload.userId));
+      // In 1:1 calls, if the other person leaves, end the call locally too.
+      if (roomId.startsWith('dm:') && payload.userId !== user.id) {
+        setCallEnded(true);
+      }
     });
     socket.on('call_ended', () => {
       setParticipants([]);

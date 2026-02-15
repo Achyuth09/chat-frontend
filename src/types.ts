@@ -67,6 +67,13 @@ export interface FriendRequest {
   createdAt?: string;
 }
 
+export interface SentFriendRequest {
+  id: string;
+  to: ChatUser;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt?: string;
+}
+
 export interface AppNotification {
   id: string;
   type: 'friend_request_received' | 'friend_request_accepted' | 'post_liked' | 'post_commented';
