@@ -59,3 +59,21 @@ export interface FeedPost {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface FriendRequest {
+  id: string;
+  from: ChatUser;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt?: string;
+}
+
+export interface AppNotification {
+  id: string;
+  type: 'friend_request_received' | 'friend_request_accepted' | 'post_liked' | 'post_commented';
+  read: boolean;
+  createdAt: string;
+  actor: ChatUser;
+  postId?: string;
+  friendRequestId?: string;
+  commentText?: string;
+}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { API, SOCKET_URL } from '../lib/config';
@@ -90,10 +90,10 @@ export function useMessages({ token, user, inMessages, roomId, makeHeaders }: Us
     }
   }
 
-  function clearMessages() {
-    setMessages([]);
-    setInput('');
-  }
+  const clearMessages = useCallback(() => {
+    setMessages((prev) => (prev.length ? [] : prev));
+    setInput((prev) => (prev ? '' : prev));
+  }, []);
 
   return {
     messages,

@@ -40,7 +40,12 @@ export default function FeedPage({ makeHeaders }: FeedPageProps) {
 
   return (
     <div className="app home-view">
-      <div className="home-feed">
+      <header className="home-header page-header">
+        <div className="header-user">
+          <span>Feed</span>
+        </div>
+      </header>
+      <div className="home-feed home-feed-scroll">
         <CreatePostForm onUploadMedia={uploadMedia} onCreatePost={createPost} />
       </div>
     </div>

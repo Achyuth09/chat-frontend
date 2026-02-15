@@ -34,6 +34,12 @@ export default function CallPage({ token, user, users }: CallPageProps) {
       })),
     [remoteEntries, nameById]
   );
+  const callTitle = useMemo(() => {
+    if (roomId.startsWith('dm:')) return 'Private Call';
+    if (roomId.startsWith('group:')) return 'Group Call';
+    return 'Call in Progress';
+  }, [roomId]);
+  const isDirectCall = useMemo(() => roomId.startsWith('dm:'), [roomId]);
 
   function toggleMic() {
     if (!localStream) return;
@@ -80,7 +86,7 @@ export default function CallPage({ token, user, users }: CallPageProps) {
   return (
     <div className="app chat-view">
       <header className="chat-header">
-        <span className="room-name">Call: {roomId}</span>
+        <span className="room-name">{callTitle}</span>
       </header>
       <VideoGrid
         localStream={localStream}
@@ -88,11 +94,12 @@ export default function CallPage({ token, user, users }: CallPageProps) {
         myLabel={user.username}
         localMicEnabled={micEnabled}
         localCameraEnabled={cameraEnabled}
+        onMiniView={enterMiniView}
+        isDirectCall={isDirectCall}
       />
       <CallControls
         micEnabled={micEnabled}
         cameraEnabled={cameraEnabled}
-        onMiniView={enterMiniView}
         onToggleMic={toggleMic}
         onToggleCamera={toggleCamera}
         onEndCall={endCall}

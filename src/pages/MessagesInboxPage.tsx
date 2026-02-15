@@ -8,9 +8,15 @@ interface MessagesInboxPageProps {
 }
 
 export default function MessagesInboxPage({ users, groups }: MessagesInboxPageProps) {
+
   return (
     <div className="app home-view">
-      <div className="home-feed">
+      <header className="home-header page-header">
+        <div className="header-user">
+          <span>Messages</span>
+        </div>
+      </header>
+      <div className="home-feed home-feed-scroll messages-home-feed">
         <section className="home-card">
           <h2>Groups</h2>
           <ul className="users-list">
@@ -29,12 +35,13 @@ export default function MessagesInboxPage({ users, groups }: MessagesInboxPagePr
         </section>
         <section className="home-card">
           <h2>Direct Messages</h2>
+          <p className="users-empty">Only accepted friends appear here</p>
           <ul className="users-list">
-            {users.length === 0 && <li className="users-empty">No users found</li>}
+            {users.length === 0 && <li className="users-empty">No friends yet</li>}
             {users.map((u) => (
               <li key={u.id}>
                 <Link to={`/messages/${u.id}`} className="list-item-btn list-link">
-                  <Avatar label={u.username} />
+                  <Avatar label={u.username} src={u.avatarUrl} />
                   <span className="list-item-main">
                     <strong>{u.username}</strong>
                   </span>

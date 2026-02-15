@@ -18,6 +18,52 @@ export function useWebRTC({ user, participants, signaling }: UseWebRTCArgs) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
   const peersRef = useRef<Record<string, RTCPeerConnection>>({});
+  const reinitInFlightRef = useRef(false);
+
+  async function replaceLocalStream(nextStream: MediaStream) {
+    const peers = Object.values(peersRef.current);
+    for (const pc of peers) {
+      const senders = pc.getSenders();
+      const nextAudio = nextStream.getAudioTracks()[0] || null;
+      const nextVideo = nextStream.getVideoTracks()[0] || null;
+      for (const sender of senders) {
+        const kind = sender.track?.kind;
+        if (kind === 'audio') {
+          await sender.replaceTrack(nextAudio);
+        } else if (kind === 'video') {
+          await sender.replaceTrack(nextVideo);
+        }
+      }
+    }
+    setLocalStream((prev) => {
+      prev?.getTracks().forEach((t) => t.stop());
+      return nextStream;
+    });
+  }
+
+  async function reinitializeLocalMediaIfNeeded(force = false) {
+    if (!user) return;
+    if (reinitInFlightRef.current) return;
+    const audioTracks = localStream?.getAudioTracks() || [];
+    const videoTracks = localStream?.getVideoTracks() || [];
+    const needsReinit =
+      force ||
+      !localStream ||
+      audioTracks.length === 0 ||
+      videoTracks.length === 0 ||
+      [...audioTracks, ...videoTracks].some((t) => t.readyState === 'ended');
+    if (!needsReinit) return;
+
+    reinitInFlightRef.current = true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      await replaceLocalStream(stream);
+    } catch {
+      // ignore; user can still continue with existing tracks or retry by toggling devices
+    } finally {
+      reinitInFlightRef.current = false;
+    }
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -34,6 +80,22 @@ export function useWebRTC({ user, participants, signaling }: UseWebRTCArgs) {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    function onVisibilityOrFocus() {
+      if (document.visibilityState === 'visible') {
+        reinitializeLocalMediaIfNeeded(false);
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityOrFocus);
+    window.addEventListener('focus', onVisibilityOrFocus);
+    window.addEventListener('pageshow', onVisibilityOrFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityOrFocus);
+      window.removeEventListener('focus', onVisibilityOrFocus);
+      window.removeEventListener('pageshow', onVisibilityOrFocus);
+    };
+  }, [localStream, user]);
 
   async function ensurePeer(remoteUserId: string) {
     if (!localStream || !user) return null;

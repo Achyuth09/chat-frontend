@@ -71,9 +71,22 @@ export function useAuth(options: UseAuthOptions = {}) {
     const formData = new FormData(e.currentTarget);
     const username = String(formData.get('username') || '').trim();
     const password = String(formData.get('password') || '');
+    const confirmPassword = String(formData.get('confirmPassword') || '');
     setAuthError('');
     if (!username || !password) return setAuthError('Username and password required');
-    if (password.length < 6) return setAuthError('Password must be at least 6 characters');
+    if (authMode === 'signup') {
+      if (password.length < 8) return setAuthError('Password must be at least 8 characters');
+      if (password !== confirmPassword) return setAuthError('Passwords do not match');
+      const hasUpper = /[A-Z]/.test(password);
+      const hasLower = /[a-z]/.test(password);
+      const hasNumber = /\d/.test(password);
+      const hasSymbol = /[^A-Za-z0-9]/.test(password);
+      if (!hasUpper || !hasLower || !hasNumber || !hasSymbol) {
+        return setAuthError(
+          'Password must include uppercase, lowercase, number, and special character'
+        );
+      }
+    }
 
     const url = authMode === 'signup' ? `${API}/auth/signup` : `${API}/auth/login`;
     fetch(url, {

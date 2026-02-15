@@ -1,9 +1,7 @@
-import type { FormEvent } from 'react';
 import Avatar from '../components/Avatar';
-import type { ChatUser, Group } from '../types';
 import { useEffect, useState } from 'react';
 import { API } from '../lib/config';
-import type { FeedPost } from '../types';
+import type { ChatUser, FeedPost } from '../types';
 import PostCard from '../components/feed/PostCard';
 
 interface HomePageProps {
@@ -65,6 +63,7 @@ export default function HomePage({
   useEffect(() => {
     fetchFeed();
   }, []);
+
   return (
     <div className="app home-view">
       <header className="home-header">
@@ -73,12 +72,14 @@ export default function HomePage({
           <span>{user.username}</span>
         </div>
       </header>
-
-      {posts.map((post) => (
-          <PostCard key={post.id} post={post} onToggleLike={toggleLike} onAddComment={addComment} />
+      <div className="home-feed home-feed-scroll">
+        {posts.map((post) => (
+          <section key={post.id} className="home-card">
+            <PostCard post={post} onToggleLike={toggleLike} onAddComment={addComment} />
+          </section>
         ))}
-
-      {error && <p className="home-error">{error}</p>}
+        {error && <p className="home-error">{error}</p>}
+      </div>
     </div>
   );
 }
