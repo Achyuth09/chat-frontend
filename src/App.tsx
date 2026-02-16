@@ -696,7 +696,7 @@ export default function App() {
           {globalActivityOpen && (
             <section className="home-card global-popover">
               <div className="user-search-head">
-                <h2>Activity</h2>
+                <h2>Activity Rahul</h2>
                 <small>{notificationsUnread} unread notifications</small>
               </div>
               <h3 className="global-popover-title">Friend Requests</h3>
