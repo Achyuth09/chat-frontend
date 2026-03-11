@@ -1,0 +1,43 @@
+@layer components {
+  .bottom-nav {
+    @apply fixed bottom-2.5 left-2.5 right-2.5 z-40 grid grid-cols-4;
+    height: calc(68px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgba(255, 255, 255, 0.9);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    box-shadow: 0 18px 34px rgba(1, 3, 10, 0.6);
+  }
+
+  .bottom-nav-link {
+    @apply inline-flex items-center justify-center font-semibold text-[var(--text-muted)] no-underline;
+  }
+
+  .nav-item-with-badge {
+    @apply inline-flex items-center gap-1.5;
+  }
+
+  .nav-icon-wrap {
+    @apply inline-flex h-6 w-6 items-center justify-center;
+  }
+
+  .nav-icon-wrap svg {
+    @apply h-[22px] w-[22px];
+  }
+
+  .bottom-nav-badge {
+    @apply flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[0.68rem] font-bold text-white;
+    background: #ef4444;
+  }
+
+  .bottom-nav-link.active {
+    @apply relative text-[var(--text)];
+  }
+
+  .bottom-nav-link.active::after {
+    content: '';
+    @apply absolute bottom-2 h-0.5 w-[26px] rounded-full;
+    background: linear-gradient(90deg, #38bdf8, #f43f5e);
+  }
+}

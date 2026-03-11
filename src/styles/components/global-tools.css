@@ -1,0 +1,123 @@
+@layer components {
+  .inbox-top-actions {
+    @apply inline-flex items-center gap-2;
+  }
+
+  .icon-btn {
+    @apply relative flex h-[38px] w-[38px] cursor-pointer items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] p-0 text-[var(--text)];
+  }
+
+  .icon-btn svg {
+    @apply h-[18px] w-[18px];
+  }
+
+  .icon-btn[aria-pressed='true'] {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+
+  .icon-btn-badge {
+    @apply absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[0.68rem] font-bold text-white;
+    background: #ef4444;
+  }
+
+  .global-top-tools {
+    @apply fixed right-3 top-3 z-[70] grid justify-items-end gap-2;
+    top: calc(12px + env(safe-area-inset-top));
+  }
+
+  .global-popover {
+    @apply max-h-[min(66vh,560px)] w-[min(92vw,420px)] overflow-y-auto;
+    box-shadow: var(--shadow-card);
+  }
+
+  .global-popover-title {
+    @apply mt-2 mb-1.5 text-[0.86rem] text-[var(--text-muted)];
+  }
+
+  .user-search-head {
+    @apply flex items-baseline justify-between gap-2;
+  }
+
+  .user-search-head small {
+    @apply text-[var(--text-muted)];
+  }
+
+  .user-search-input-wrap {
+    @apply flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-deep)] px-2 py-1.5;
+  }
+
+  .user-search-input-wrap:focus-within {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .user-search-icon {
+    @apply w-5 text-center font-bold text-[var(--text-muted)];
+  }
+
+  .user-search-input {
+    @apply flex-1 border-0 bg-transparent text-[var(--text)] outline-none;
+    font-size: 0.95rem;
+  }
+
+  .user-search-clear {
+    @apply cursor-pointer rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] px-2 py-1 text-[0.78rem] text-[var(--text)];
+  }
+
+  .search-results-list {
+    @apply m-0 grid list-none gap-2 p-0;
+  }
+
+  .search-result-row {
+    @apply flex items-center justify-between gap-2.5 rounded-xl border border-[var(--border)] px-2.5 py-2;
+    background: rgba(28, 28, 40, 0.6);
+  }
+
+  .search-result-row.unread {
+    border-color: rgba(56, 189, 248, 0.85);
+  }
+
+  .search-add-btn {
+    @apply cursor-pointer rounded-lg border-0 px-3 py-1.5 text-[0.82rem] font-semibold text-white;
+    background: var(--accent);
+  }
+
+  .search-add-btn.sent {
+    @apply bg-green-500 text-[#0d1117];
+  }
+
+  .request-user {
+    @apply inline-flex items-center gap-2.5;
+  }
+
+  .request-actions {
+    @apply inline-flex items-center gap-2;
+  }
+
+  .request-actions .danger-btn {
+    @apply bg-red-500 text-white;
+  }
+
+  .incoming-call-banner {
+    @apply fixed right-3.5 top-3.5 z-[80] min-w-[230px] rounded-xl border border-[var(--border)] bg-white/95 p-3;
+    box-shadow: var(--shadow-card);
+  }
+
+  .incoming-call-actions {
+    @apply mt-2 flex gap-2;
+  }
+
+  .incoming-call-actions button {
+    @apply cursor-pointer rounded-lg border-0 px-2.5 py-1.5 font-bold text-[#0d1117];
+    background: #22c55e;
+  }
+
+  .incoming-call-actions .danger-btn {
+    @apply bg-red-500 text-white;
+  }
+
+  .danger-btn {
+    @apply bg-red-500 text-white;
+  }
+}

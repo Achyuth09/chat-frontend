@@ -5,10 +5,10 @@ import type { ChatUser, Group } from '../types';
 interface MessagesInboxPageProps {
   users: ChatUser[];
   groups: Group[];
+  onlineUserIds: Set<string>;
 }
 
-export default function MessagesInboxPage({ users, groups }: MessagesInboxPageProps) {
-
+export default function MessagesInboxPage({ users, groups, onlineUserIds }: MessagesInboxPageProps) {
   return (
     <div className="app home-view">
       <header className="home-header page-header">
@@ -41,9 +41,13 @@ export default function MessagesInboxPage({ users, groups }: MessagesInboxPagePr
             {users.map((u) => (
               <li key={u.id}>
                 <Link to={`/messages/${u.id}`} className="list-item-btn list-link">
-                  <Avatar label={u.username} src={u.avatarUrl} />
+                  <span className="avatar-wrap">
+                    <Avatar label={u.username} src={u.avatarUrl} />
+                    {onlineUserIds.has(u.id) && <span className="online-dot" aria-label="Online" />}
+                  </span>
                   <span className="list-item-main">
                     <strong>{u.username}</strong>
+                    {onlineUserIds.has(u.id) && <small className="online-text">Online</small>}
                   </span>
                 </Link>
               </li>

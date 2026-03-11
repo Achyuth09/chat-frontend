@@ -23,8 +23,25 @@ export default function AuthPage({
   return (
     <div className="app">
       <div className="auth-card">
-        <h1>Chat</h1>
-        <p className="auth-subtitle">Connect, message, and call your friends.</p>
+        <div className="auth-logo" aria-hidden>
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="auth-logo-g" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#38bdf8" />
+                <stop offset="100%" stopColor="#f43f5e" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M32 8 L52 20 L52 44 L32 56 L12 44 L12 20 Z"
+              fill="url(#auth-logo-g)"
+              stroke="rgba(255,255,255,0.3)"
+              strokeWidth="2"
+            />
+            <path d="M32 20 L44 26 L44 38 L32 44 L20 38 L20 26 Z" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+          </svg>
+        </div>
+        <h1>Hive</h1>
+        <p className="auth-subtitle">Your community: posts, messages, and calls.</p>
         <p className="status">
           {status === 'checking' && 'Checking...'}
           {status === 'connected' && 'Sign in or create an account'}

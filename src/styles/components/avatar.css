@@ -1,0 +1,10 @@
+@layer components {
+  .avatar {
+    @apply inline-flex h-[34px] w-[34px] flex-shrink-0 overflow-hidden rounded-full font-bold text-white;
+    background: linear-gradient(135deg, #38bdf8 0%, #f43f5e 100%);
+  }
+
+  .avatar img {
+    @apply h-full w-full object-cover;
+  }
+}

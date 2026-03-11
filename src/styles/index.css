@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import './base.css';
+@import './animations.css';
+@import './utilities.css';
+@import './components/auth.css';
+@import './components/layout.css';
+@import './components/home.css';
+@import './components/chat.css';
+@import './components/nav.css';
+@import './components/feed.css';
+@import './components/call.css';
+@import './components/global-tools.css';
+@import './components/profile.css';
+@import './components/requests.css';
+@import './components/online.css';
+@import './responsive.css';

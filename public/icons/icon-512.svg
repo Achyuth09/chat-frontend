@@ -1,12 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#14141c"/>
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#8b5cf6"/>
+    <linearGradient id="hive-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#f43f5e"/>
     </linearGradient>
   </defs>
-  <circle cx="256" cy="218" r="108" fill="url(#g)"/>
-  <rect x="116" y="328" width="280" height="54" rx="27" fill="#6366f1"/>
-  <path d="M210 212h92M210 252h58" stroke="#fff" stroke-width="18" stroke-linecap="round"/>
+  <rect width="512" height="512" rx="112" fill="#0f172a"/>
+  <!-- Honeycomb hexagon - Hive logo -->
+  <g transform="translate(256 256)">
+    <path d="M0 -128 L110.9 -64 L110.9 64 L0 128 L-110.9 64 L-110.9 -64 Z" fill="url(#hive-g)" stroke="rgba(255,255,255,0.2)" stroke-width="8"/>
+    <path d="M0 -85 L73.8 -42.5 L73.8 42.5 L0 85 L-73.8 42.5 L-73.8 -42.5 Z" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="5"/>
+  </g>
 </svg>

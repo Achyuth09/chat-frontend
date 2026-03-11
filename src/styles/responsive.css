@@ -1,0 +1,169 @@
+@layer components {
+  @media (max-width: 768px) {
+    .home-view {
+      height: calc(100vh - 64px - env(safe-area-inset-bottom));
+      max-height: calc(100vh - 64px - env(safe-area-inset-bottom));
+    }
+
+    .home-feed {
+      @apply gap-3 px-2.5;
+      margin: 0.75rem auto;
+    }
+
+    .home-card {
+      @apply rounded-xl p-3;
+    }
+
+    .chat-view {
+      height: calc(100vh - 64px - env(safe-area-inset-bottom));
+      max-height: calc(100vh - 64px - env(safe-area-inset-bottom));
+    }
+
+    .chat-header {
+      @apply flex-wrap items-center gap-2 px-3 py-2.5;
+    }
+
+    .chat-header .room-name {
+      @apply max-w-[38vw] overflow-hidden text-ellipsis whitespace-nowrap text-base;
+    }
+
+    .chat-header .you {
+      @apply px-2 py-1 text-[0.82rem];
+    }
+
+    .group-panel {
+      @apply top-[63px] px-2.5 py-2;
+    }
+
+    .message-list {
+      @apply px-3 pb-2.5 pt-3.5;
+    }
+
+    .msg {
+      @apply max-w-[92%] px-3 py-2.5;
+    }
+
+    .msg .text {
+      @apply text-[0.98rem];
+    }
+
+    .input-form {
+      @apply items-center gap-2 px-2.5;
+    }
+
+    .input-form input {
+      @apply min-w-0 px-3 py-2.5 text-[0.95rem];
+    }
+
+    .input-form button,
+    .file-btn.compact {
+      @apply px-2.5 py-2 text-[0.86rem];
+    }
+
+    .call-btn {
+      @apply px-2.5 py-1 text-[0.8rem];
+    }
+
+    .video-grid {
+      @apply gap-2.5 p-2.5;
+      grid-template-columns: 1fr;
+    }
+
+    .video-grid.direct-call-layout {
+      @apply p-2.5;
+    }
+
+    .video-grid.direct-call-layout .video-tile.primary video {
+      height: min(68vh, 520px);
+    }
+
+    .local-floating-wrap {
+      @apply right-3 bottom-3;
+      width: min(46vw, 170px);
+    }
+
+    .local-floating-wrap .video-tile video {
+      @apply h-[124px];
+    }
+
+    .video-tile video {
+      @apply h-[240px];
+    }
+
+    .call-controls {
+      @apply grid grid-cols-3 gap-2 p-2.5;
+    }
+
+    .call-controls button {
+      @apply px-2 py-2 text-[0.8rem];
+    }
+
+    .incoming-call-banner {
+      @apply left-2.5 right-2.5 min-w-0;
+      top: calc(10px + env(safe-area-inset-top));
+    }
+
+    .post-media {
+      @apply max-h-[300px];
+    }
+
+    .inbox-top-toolbar {
+      @apply hidden;
+    }
+
+    .user-search-card.open {
+      @apply grid;
+    }
+
+    .user-search-card {
+      @apply hidden;
+    }
+
+    .activity-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .global-top-tools {
+      @apply right-2.5;
+      top: calc(10px + env(safe-area-inset-top));
+    }
+
+    .global-popover {
+      width: min(95vw, 420px);
+      max-height: min(72vh, 600px);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .chat-header .you {
+      @apply hidden;
+    }
+
+    .chat-header .room-name {
+      @apply max-w-[47vw];
+    }
+
+    .member-tags {
+      @apply gap-1.5;
+    }
+
+    .member-tag {
+      @apply px-2 py-1 text-[0.75rem];
+    }
+
+    .feed-preview-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .profile-actions {
+      @apply grid grid-cols-1;
+    }
+
+    .profile-upload-btn,
+    .profile-logout {
+      @apply w-full justify-center;
+    }
+  }
+}

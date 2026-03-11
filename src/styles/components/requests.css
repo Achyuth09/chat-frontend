@@ -1,0 +1,42 @@
+@layer components {
+  .request-row {
+    @apply flex items-center justify-between gap-2.5 py-2;
+  }
+
+  .request-row button {
+    @apply w-auto px-2.5 py-1.5 text-[0.84rem];
+  }
+
+  .notifications-head {
+    @apply mb-1.5 flex items-center justify-between gap-3;
+  }
+
+  .notifications-head-actions {
+    @apply inline-flex items-center gap-2 text-[0.85rem] text-[var(--text-muted)];
+  }
+
+  .notifications-head-actions button {
+    @apply w-auto px-2.5 py-1.5 text-[0.82rem];
+  }
+
+  .notifications-list {
+    @apply m-0 grid list-none gap-2 p-0;
+  }
+
+  .notification-row {
+    @apply flex items-center justify-between gap-3 rounded-[10px] border border-[var(--border)] px-2.5 py-2;
+  }
+
+  .notification-row.unread {
+    border-color: rgba(56, 189, 248, 0.85);
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25);
+  }
+
+  .notification-main {
+    @apply inline-flex flex-col gap-0.5;
+  }
+
+  .notification-main small {
+    @apply text-[var(--text-muted)];
+  }
+}

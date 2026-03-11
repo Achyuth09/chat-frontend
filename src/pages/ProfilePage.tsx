@@ -89,7 +89,7 @@ export default function ProfilePage({ user, onLogout, makeHeaders }: ProfilePage
         <section className="home-card profile-hero">
           <div className="profile-main">
             <span className="profile-avatar-wrap">
-              <Avatar label={user.username} src={avatarUrl} />
+              <Avatar label={user.username} src={avatarUrl} size="lg" />
             </span>
             <div className="profile-head-text">
               <h2>{user.username}</h2>

@@ -1,0 +1,80 @@
+@layer components {
+  .profile-feed {
+    @apply gap-3.5;
+  }
+
+  .profile-hero {
+    @apply grid gap-4;
+  }
+
+  .profile-main {
+    @apply flex items-center gap-4;
+  }
+
+  .profile-head-text h2 {
+    @apply m-0;
+  }
+
+  .profile-head-text p {
+    @apply mt-1 m-0 text-[var(--text-muted)];
+  }
+
+  .profile-meta {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .profile-chip {
+    @apply grid min-w-[92px] gap-0.5 rounded-xl border border-[var(--border)] px-2.5 py-2;
+    background: rgba(17, 23, 40, 0.64);
+  }
+
+  .profile-chip strong {
+    @apply text-[0.95rem];
+  }
+
+  .profile-chip span {
+    @apply text-[0.75rem] text-[var(--text-muted)];
+  }
+
+  .profile-actions {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .profile-upload-btn {
+    @apply m-0 min-w-[150px] max-w-none rounded-xl border-0 px-4 py-2.5 font-semibold text-white;
+    background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+    box-shadow: 0 10px 20px rgba(56, 189, 248, 0.28);
+    transition: transform 0.14s ease, filter 0.2s ease;
+  }
+
+  .profile-upload-btn:hover {
+    filter: brightness(1.05);
+  }
+
+  .profile-upload-btn:active {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  .profile-logout {
+    @apply m-0 min-w-[150px] rounded-xl border-0 px-4 py-2.5 font-semibold text-white;
+    background: linear-gradient(135deg, #f43f5e 0%, #ef4444 100%);
+    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.28);
+    transition: transform 0.14s ease, filter 0.2s ease;
+  }
+
+  .profile-logout:hover {
+    filter: brightness(1.05);
+  }
+
+  .profile-logout:active {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  .profile-posts-head {
+    @apply grid gap-1;
+  }
+
+  .profile-posts-head small {
+    @apply text-[var(--text-muted)];
+  }
+}

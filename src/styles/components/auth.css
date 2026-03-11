@@ -1,0 +1,131 @@
+@layer components {
+  .app {
+    @apply flex min-h-screen flex-col items-center justify-center p-6;
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.16), transparent), var(--bg-deep);
+  }
+
+  .auth-card {
+    @apply w-full max-w-[400px] rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-9;
+    box-shadow: var(--shadow-card);
+  }
+
+  .auth-logo {
+    @apply mx-auto mb-4 flex justify-center;
+  }
+
+  .auth-logo svg {
+    @apply h-16 w-16;
+  }
+
+  .auth-card h1 {
+    @apply m-0 mb-1 text-[1.75rem] font-bold;
+    background: linear-gradient(135deg, #0f172a 0%, #0ea5e9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .auth-card .auth-subtitle {
+    @apply m-0 mb-4 text-[var(--text-muted)];
+    font-size: 0.92rem;
+  }
+
+  .auth-card .status {
+    @apply mb-6 inline-flex items-center gap-1.5 text-[0.8125rem] text-[var(--text-muted)];
+  }
+
+  .auth-card .status::before {
+    content: '';
+    @apply h-1.5 w-1.5 rounded-full bg-current;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .auth-card form {
+    @apply flex flex-col gap-4;
+  }
+
+  .auth-card form > button[type='submit'] {
+    @apply min-h-[50px] rounded-xl px-4 py-3.5 text-[1.02rem] font-bold tracking-wide text-white;
+    border: 0;
+    background: linear-gradient(135deg, #38bdf8 0%, #f43f5e 100%);
+    box-shadow: 0 12px 24px rgba(56, 189, 248, 0.28);
+    transition: transform 0.12s ease, filter 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .auth-card form > button[type='submit']:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 16px 28px rgba(56, 189, 248, 0.34);
+  }
+
+  .auth-card form > button[type='submit']:active {
+    transform: translateY(1px) scale(0.99);
+  }
+
+  .auth-mode-row {
+    @apply mb-3.5 grid grid-cols-2 gap-2;
+  }
+
+  .auth-mode-btn {
+    @apply cursor-pointer rounded-[10px] border border-[var(--border)] bg-[var(--bg-deep)] px-2.5 py-2 font-semibold text-[var(--text-muted)];
+  }
+
+  .auth-mode-btn.active {
+    @apply border-transparent text-white;
+    background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  }
+
+  .auth-card input {
+    @apply rounded-xl border border-[var(--border)] bg-[var(--bg-deep)] px-4 py-3 text-base text-[var(--text)];
+  }
+
+  .auth-password-wrap {
+    @apply relative;
+  }
+
+  .auth-password-wrap input {
+    @apply w-full pr-10;
+  }
+
+  .auth-pass-toggle {
+    @apply absolute right-2 top-1/2 flex h-[18px] w-[18px] -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent p-0 opacity-95;
+    color: #000;
+    z-index: 2;
+  }
+
+  .auth-pass-toggle svg {
+    @apply h-[15px] w-[15px];
+  }
+
+  .auth-card .auth-error {
+    @apply m-0 text-[0.875rem] text-red-400;
+  }
+
+  .auth-card .auth-hint {
+    @apply -mt-1.5 m-0 text-[0.8rem] text-[var(--text-muted)];
+  }
+
+  .auth-card .auth-toggle {
+    @apply mt-4 w-full cursor-pointer rounded-[11px] border px-3 py-2.5 text-[0.9rem] font-semibold;
+    border-color: rgba(14, 116, 144, 0.3);
+    background: rgba(224, 242, 254, 0.55);
+    color: #0c4a6e;
+    transition: transform 0.12s ease, filter 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .auth-card .auth-toggle:hover {
+    filter: brightness(1.03);
+    box-shadow: 0 8px 18px rgba(56, 189, 248, 0.2);
+  }
+
+  .auth-card .auth-toggle:active {
+    transform: translateY(1px) scale(0.99);
+  }
+
+  .app-loader-card {
+    @apply text-center;
+  }
+
+  .app-loader-card h1 {
+    @apply mb-2;
+  }
+}

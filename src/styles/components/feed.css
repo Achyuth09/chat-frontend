@@ -1,0 +1,76 @@
+@layer components {
+  .feed-create-form {
+    @apply flex flex-col gap-3;
+  }
+
+  .feed-create-form textarea {
+    @apply rounded-[10px] border border-[var(--border)] bg-[var(--bg-deep)] p-3 text-[var(--text)];
+    resize: vertical;
+  }
+
+  .file-btn {
+    @apply inline-flex max-w-[190px] cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2.5 text-[var(--text)];
+  }
+
+  .file-btn input {
+    @apply hidden;
+  }
+
+  .file-btn.compact {
+    @apply max-w-none whitespace-nowrap;
+  }
+
+  .feed-preview-list {
+    @apply grid gap-2.5;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .feed-preview-list img,
+  .feed-preview-list video {
+    @apply h-[120px] w-full rounded-[10px] border border-[var(--border)] object-cover;
+  }
+
+  .post-card {
+    @apply grid gap-2.5;
+  }
+
+  .post-head {
+    @apply flex items-center gap-2.5;
+  }
+
+  .post-head small {
+    @apply block text-[var(--text-muted)];
+  }
+
+  .post-caption {
+    @apply m-0;
+  }
+
+  .post-media {
+    @apply max-h-[420px] w-full rounded-[10px] border object-cover;
+    border-color: rgba(148, 163, 184, 0.26);
+  }
+
+  .post-actions {
+    @apply flex items-center justify-between gap-3;
+  }
+
+  .post-actions button {
+    @apply cursor-pointer rounded-lg border-0 px-3 py-2 text-white;
+    background: linear-gradient(135deg, #38bdf8 0%, #f43f5e 100%);
+    box-shadow: 0 8px 18px rgba(56, 189, 248, 0.28);
+    transition: transform 0.12s ease, filter 0.2s ease;
+  }
+
+  .post-actions button:hover {
+    filter: brightness(1.06);
+  }
+
+  .post-actions button:active {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  .post-comments {
+    @apply m-0 grid list-none gap-1 p-0 text-[var(--text-muted)];
+  }
+}

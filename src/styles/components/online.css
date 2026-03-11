@@ -1,0 +1,21 @@
+@layer components {
+  .avatar-wrap {
+    @apply relative inline-flex;
+  }
+
+  .online-dot {
+    @apply absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-green-500;
+  }
+
+  .online-dot.small {
+    @apply -bottom-0.5 -right-0.5 h-1.5 w-1.5 border;
+  }
+
+  .online-text {
+    @apply text-green-600;
+  }
+
+  .online-badge {
+    @apply rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700;
+  }
+}

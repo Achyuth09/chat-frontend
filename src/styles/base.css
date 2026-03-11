@@ -1,0 +1,42 @@
+@layer base {
+  :root {
+    --bg-deep: #f5fbff;
+    --bg-surface: rgba(255, 255, 255, 0.92);
+    --bg-elevated: rgba(248, 253, 255, 0.96);
+    --border: rgba(14, 116, 144, 0.22);
+    --border-focus: #38bdf8;
+    --text: #0f172a;
+    --text-muted: #475569;
+    --accent: #38bdf8;
+    --accent-hover: #67e8f9;
+    --accent-glow: rgba(56, 189, 248, 0.35);
+    --you-bubble: linear-gradient(135deg, #38bdf8 0%, #f43f5e 100%);
+    --other-bubble: rgba(241, 245, 249, 0.95);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --shadow-card: 0 12px 28px rgba(14, 116, 144, 0.16);
+    --shadow-chat: 0 8px 20px rgba(14, 116, 144, 0.14);
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  body {
+    @apply m-0 antialiased;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 600px at 0% -10%, rgba(56, 189, 248, 0.2), transparent 60%),
+      radial-gradient(700px 480px at 100% 0%, rgba(244, 63, 94, 0.15), transparent 58%),
+      linear-gradient(180deg, #ffffff 0%, #f0f9ff 46%, #fff1f2 100%);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}

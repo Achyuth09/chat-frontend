@@ -1,7 +1,7 @@
 {
-  "name": "ChatApp",
-  "short_name": "ChatApp",
-  "description": "Realtime chat, feed, and video calls",
+  "name": "Hive",
+  "short_name": "Hive",
+  "description": "Your community: posts, messages, and video calls",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

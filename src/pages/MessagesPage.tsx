@@ -1,5 +1,6 @@
 import type { FormEvent, MutableRefObject } from 'react';
 import Avatar from '../components/Avatar';
+import { getOtherUserIdFromDmRoom } from '../utils/chat';
 import type { ChatMessage, ChatUser, Group } from '../types';
 
 interface MessagesPageProps {
@@ -7,6 +8,7 @@ interface MessagesPageProps {
   roomLabel: string;
   roomId: string;
   selectedGroup: Group | null;
+  onlineUserIds: Set<string>;
   isGroupAdmin: boolean;
   memberUsername: string;
   setMemberUsername: (value: string) => void;
@@ -28,6 +30,7 @@ export default function MessagesPage({
   roomLabel,
   roomId,
   selectedGroup,
+  onlineUserIds,
   isGroupAdmin,
   memberUsername,
   setMemberUsername,
@@ -56,14 +59,21 @@ export default function MessagesPage({
     );
   }
 
+  const otherUserId = !selectedGroup && roomId ? getOtherUserIdFromDmRoom(roomId, user.id) : null;
+  const isOtherOnline = otherUserId ? onlineUserIds.has(otherUserId) : false;
+
   return (
     <div className="app chat-view">
       <header className="chat-header">
         <button type="button" className="back-btn" onClick={onLeaveChat} aria-label="Back">
           ←
         </button>
-        <Avatar label={roomLabel} />
+        <span className="avatar-wrap">
+          <Avatar label={roomLabel} />
+          {isOtherOnline && <span className="online-dot" aria-label="Online" />}
+        </span>
         <span className="room-name">{roomLabel}</span>
+        {isOtherOnline && <span className="online-badge">Online</span>}
         <span className="you">{user.username}</span>
         {roomId && (
           <button type="button" className="call-btn" onClick={onStartCall}>
@@ -77,6 +87,7 @@ export default function MessagesPage({
           <div className="member-tags">
             {selectedGroup.members?.map((m) => (
               <span key={m.id} className="member-tag">
+                {onlineUserIds.has(m.id) && <span className="online-dot small" aria-hidden />}
                 {m.username}
                 {isGroupAdmin && m.id !== user.id && (
                   <button type="button" onClick={() => onRemoveMember(m.id)}>

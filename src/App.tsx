@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { io, type Socket } from 'socket.io-client';
-import Avatar from './components/Avatar';
 import AuthPage from './pages/AuthPage';
 import HomePage from './pages/HomePage';
 import MessagesPage from './pages/MessagesPage';
@@ -13,52 +11,37 @@ import CallPage from './pages/CallPage';
 import MessagesInboxPage from './pages/MessagesInboxPage';
 import NotificationsPage from './pages/NotificationsPage';
 import BottomNav from './components/BottomNav';
-import type { AppNotification, ChatUser, FriendRequest, Group, SentFriendRequest } from './types';
+import IncomingCallBanner from './components/IncomingCallBanner';
+import GlobalTopTools from './components/GlobalTopTools';
+import type { Group } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useGroups } from './hooks/useGroups';
 import { useMessages } from './hooks/useMessages';
-import { API, SOCKET_URL } from './lib/config';
-
-function dmRoomId(myId: string, otherId: string): string {
-  const [a, b] = [myId, otherId].sort();
-  return `dm:${a}:${b}`;
-}
+import { useAppSocket } from './hooks/useAppSocket';
+import { useIncomingCall } from './hooks/useIncomingCall';
+import { useCallRingtone } from './hooks/useCallRingtone';
+import { useRoomSync } from './hooks/useRoomSync';
+import { useGlobalActivity } from './hooks/useGlobalActivity';
+import { useGlobalSearch } from './hooks/useGlobalSearch';
+import { useOnlineUsers } from './hooks/useOnlineUsers';
+import { API } from './lib/config';
 
 export default function App() {
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const [roomId, setRoomId] = useState('');
   const [roomLabel, setRoomLabel] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [incomingCall, setIncomingCall] = useState<{
-    roomId: string;
-    from?: { id?: string; username?: string };
-  } | null>(null);
-  const [notificationsUnread, setNotificationsUnread] = useState(0);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const [globalActivityOpen, setGlobalActivityOpen] = useState(false);
-  const [globalSearch, setGlobalSearch] = useState('');
-  const [globalSearching, setGlobalSearching] = useState(false);
-  const [globalSearchResults, setGlobalSearchResults] = useState<ChatUser[]>([]);
-  const [globalSearchError, setGlobalSearchError] = useState('');
-  const [globalSendingTo, setGlobalSendingTo] = useState('');
-  const [globalRequestedIds, setGlobalRequestedIds] = useState<Record<string, boolean>>({});
-  const [globalNotifications, setGlobalNotifications] = useState<AppNotification[]>([]);
-  const [globalRequests, setGlobalRequests] = useState<FriendRequest[]>([]);
-  const callNotifySocketRef = useRef<Socket | null>(null);
-  const ringIntervalRef = useRef<number | null>(null);
-  const locationPathRef = useRef(location.pathname);
 
   const inMessages = location.pathname.startsWith('/messages');
   const inActiveChatRoom =
     /^\/messages\/[^/]+$/.test(location.pathname) || /^\/messages\/group\/[^/]+$/.test(location.pathname);
   const showGlobalTopTools = !location.pathname.startsWith('/call/') && !inActiveChatRoom;
-  useEffect(() => {
-    locationPathRef.current = location.pathname;
-  }, [location.pathname]);
 
-  const { user, token, authMode, setAuthMode, authError, setAuthError, status, handleAuth, logout } =
-    useAuth();
+  const { user, token, authMode, setAuthMode, authError, setAuthError, status, handleAuth, logout } = useAuth();
+
   const makeHeaders = useCallback(
     (extra: Record<string, string> = {}) => {
       if (!token) return { ...extra };
@@ -66,20 +49,18 @@ export default function App() {
     },
     [token]
   );
+
   const {
     users,
     groups,
-    homeError,
-    newGroupName,
-    setNewGroupName,
     memberUsername,
     setMemberUsername,
-    handleCreateGroup,
     handleAddMember,
     removeMember,
     refreshHomeData,
     clearGroupInputs,
   } = useGroups({ token, user, makeHeaders });
+
   const {
     messages,
     input,
@@ -97,319 +78,118 @@ export default function App() {
     makeHeaders,
   });
 
-  const isGroupAdmin = selectedGroup ? selectedGroup.admins?.includes(user?.id || '') : false;
+  const { socket } = useAppSocket({ token, user });
 
-  function openDm(otherUser: ChatUser) {
-    if (!user) return;
-    setSelectedGroup(null);
-    setRoomId(dmRoomId(user.id, otherUser.id));
-    setRoomLabel(otherUser.username);
-    clearMessages();
-    navigate(`/messages/${otherUser.id}`);
-  }
+  const {
+    incomingCall,
+    setIncomingCall,
+    acceptIncomingCall,
+    rejectIncomingCall,
+    startCall,
+    clearIncomingCall,
+  } = useIncomingCall({ socket, user });
 
-  function openGroup(group: Group) {
-    setSelectedGroup(group);
-    setRoomId(group.roomId);
-    setRoomLabel(group.name);
-    clearMessages();
-    navigate(`/messages/group/${group.id}`);
-  }
+  useCallRingtone({ incomingCall });
 
-  // Keep room state aligned with URL for direct links/reloads.
-  useEffect(() => {
-    if (!user) return;
-    const groupMatch = location.pathname.match(/^\/messages\/group\/([^/]+)$/);
-    if (groupMatch) {
-      const gid = decodeURIComponent(groupMatch[1]);
-      const group = groups.find((g) => g.id === gid);
-      if (group) {
-        setSelectedGroup(group);
-        setRoomId(group.roomId);
-        setRoomLabel(group.name);
-      }
-      return;
-    }
+  const { leaveChat } = useRoomSync({
+    user,
+    users,
+    groups,
+    setRoomId,
+    setRoomLabel,
+    setSelectedGroup,
+    clearMessages,
+    clearGroupInputs,
+  });
 
-    const dmMatch = location.pathname.match(/^\/messages\/([^/]+)$/);
-    if (dmMatch) {
-      const targetId = decodeURIComponent(dmMatch[1]);
-      const target = users.find((u) => u.id === targetId);
-      if (target) {
-        setSelectedGroup(null);
-        setRoomId(dmRoomId(user.id, target.id));
-        setRoomLabel(target.username);
-      }
-      return;
-    }
+  const {
+    notificationsUnread,
+    setNotificationsUnread,
+    globalNotifications,
+    globalRequests,
+    globalRequestedIds,
+    setGlobalRequestedIds,
+    setGlobalRequests,
+  } = useGlobalActivity({ socket, token, user, makeHeaders });
 
-    if (location.pathname === '/messages') {
-      setRoomId('');
-      setRoomLabel('');
-      setSelectedGroup(null);
-      clearMessages();
-    }
-  }, [location.pathname, users, groups, user, clearMessages]);
+  const { onlineUserIds } = useOnlineUsers(socket);
 
-  useEffect(() => {
-    if (!token || !user) return;
-    const socket = io(SOCKET_URL, { auth: { token } });
-    callNotifySocketRef.current = socket;
-
-    socket.on('incoming_call', (payload: { roomId?: string; from?: { id?: string; username?: string } }) => {
-      if (!payload?.roomId) return;
-      if (payload.from?.id && payload.from.id === user.id) return;
-      if (locationPathRef.current.startsWith('/call/')) return;
-      setIncomingCall({ roomId: payload.roomId, from: payload.from });
-    });
-    socket.on('call_accept', (payload: { roomId?: string }) => {
-      if (!payload?.roomId) return;
-      setIncomingCall((prev) => (prev?.roomId === payload.roomId ? null : prev));
-    });
-    socket.on('call_reject', (payload: { roomId?: string }) => {
-      if (!payload?.roomId) return;
-      setIncomingCall((prev) => (prev?.roomId === payload.roomId ? null : prev));
-    });
-    socket.on('call_ended', (payload: { roomId?: string }) => {
-      if (!payload?.roomId) return;
-      setIncomingCall((prev) => (prev?.roomId === payload.roomId ? null : prev));
-    });
-
-    return () => {
-      socket.off('incoming_call');
-      socket.off('call_accept');
-      socket.off('call_reject');
-      socket.off('call_ended');
-      socket.disconnect();
-      callNotifySocketRef.current = null;
-    };
-  }, [token, user]);
-
-  useEffect(() => {
-    function hasUserInteraction() {
-      const ua = (navigator as Navigator & { userActivation?: { hasBeenActive?: boolean } }).userActivation;
-      if (typeof ua?.hasBeenActive === 'boolean') return ua.hasBeenActive;
-      return false;
-    }
-
-    function stopVibrationIfAllowed() {
-      if (!('vibrate' in navigator) || !hasUserInteraction()) return;
-      try {
-        navigator.vibrate(0);
-      } catch {
-        // ignore browser intervention warnings
-      }
-    }
-
-    function playRingTone() {
-      if (!hasUserInteraction()) return;
-      const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.38);
-      window.setTimeout(() => {
-        ctx.close().catch(() => {
-          // ignore
-        });
-      }, 500);
-    }
-
-    if (!incomingCall || location.pathname.startsWith('/call/')) {
-      if (ringIntervalRef.current) {
-        window.clearInterval(ringIntervalRef.current);
-        ringIntervalRef.current = null;
-      }
-      stopVibrationIfAllowed();
-      return;
-    }
-
-    playRingTone();
-    ringIntervalRef.current = window.setInterval(playRingTone, 1500);
-    if ('vibrate' in navigator && hasUserInteraction()) {
-      try {
-        navigator.vibrate([200, 120, 200]);
-      } catch {
-        // ignore browser intervention warnings
-      }
-    }
-
-    return () => {
-      if (ringIntervalRef.current) {
-        window.clearInterval(ringIntervalRef.current);
-        ringIntervalRef.current = null;
-      }
-      stopVibrationIfAllowed();
-    };
-  }, [incomingCall, location.pathname]);
+  const {
+    globalSearch,
+    setGlobalSearch,
+    globalSearching,
+    globalSearchResults,
+    globalSearchError,
+    setGlobalSearchError,
+    globalSendingTo,
+    setGlobalSendingTo,
+  } = useGlobalSearch({ token, user, makeHeaders });
 
   useEffect(() => {
     setGlobalSearchOpen(false);
     setGlobalActivityOpen(false);
   }, [location.pathname]);
 
-  useEffect(() => {
-    if (!token || !user) {
-      setNotificationsUnread(0);
-      return;
-    }
+  const isGroupAdmin = selectedGroup ? selectedGroup.admins?.includes(user?.id || '') : false;
 
-    let mounted = true;
-
-    async function fetchUnread() {
-      try {
-        const res = await fetch(`${API}/notifications`, { headers: makeHeaders() });
-        const data = await res.json();
-        if (!mounted) return;
-        setNotificationsUnread(Number(data?.unreadCount || 0));
-      } catch {
-        if (!mounted) return;
-      }
-    }
-
-    fetchUnread();
-    const id = window.setInterval(fetchUnread, 15000);
-    return () => {
-      mounted = false;
-      window.clearInterval(id);
-    };
-  }, [token, user, makeHeaders]);
-
-  useEffect(() => {
-    if (!token || !user) return;
-    let mounted = true;
-    async function loadActivitySummary() {
-      try {
-        const [notificationsRes, requestsRes, sentRequestsRes] = await Promise.all([
-          fetch(`${API}/notifications`, { headers: makeHeaders() }),
-          fetch(`${API}/friend-requests`, { headers: makeHeaders() }),
-          fetch(`${API}/friend-requests/sent`, { headers: makeHeaders() }),
-        ]);
-        const [notificationsData, requestsData, sentRequestsData] = await Promise.all([
-          notificationsRes.json(),
-          requestsRes.json(),
-          sentRequestsRes.json(),
-        ]);
-        if (!mounted) return;
-        const items = Array.isArray(notificationsData?.items)
-          ? (notificationsData.items as AppNotification[])
-          : [];
-        setGlobalNotifications(items.slice(0, 6));
-        setNotificationsUnread(Number(notificationsData?.unreadCount || 0));
-        setGlobalRequests(Array.isArray(requestsData) ? (requestsData as FriendRequest[]) : []);
-        const sent = Array.isArray(sentRequestsData) ? (sentRequestsData as SentFriendRequest[]) : [];
-        setGlobalRequestedIds(
-          sent.reduce<Record<string, boolean>>((acc, item) => {
-            if (item?.to?.id) acc[item.to.id] = true;
-            return acc;
-          }, {})
-        );
-      } catch {
-        if (!mounted) return;
-      }
-    }
-    loadActivitySummary();
-    const id = window.setInterval(loadActivitySummary, 15000);
-    return () => {
-      mounted = false;
-      window.clearInterval(id);
-    };
-  }, [token, user, makeHeaders]);
-
-  useEffect(() => {
-    const q = globalSearch.trim();
-    if (!token || !user || q.length < 2) {
-      setGlobalSearchResults([]);
-      setGlobalSearching(false);
-      setGlobalSearchError('');
-      return;
-    }
-    const timeout = window.setTimeout(async () => {
-      setGlobalSearching(true);
+  const sendGlobalFriendRequest = useCallback(
+    async (to: string) => {
+      if (globalRequestedIds[to] || users.some((u) => u.id === to)) return;
+      setGlobalSendingTo(to);
       setGlobalSearchError('');
       try {
-        const res = await fetch(`${API}/users/search?q=${encodeURIComponent(q)}`, {
-          headers: makeHeaders(),
+        const res = await fetch(`${API}/friend-requests`, {
+          method: 'POST',
+          headers: makeHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ to }),
         });
         const data = await res.json();
-        setGlobalSearchResults(Array.isArray(data) ? (data as ChatUser[]) : []);
+        if (!res.ok || data?.error) {
+          setGlobalSearchError(data?.error || 'Failed to send request');
+          return;
+        }
+        setGlobalRequestedIds((prev) => ({ ...prev, [to]: true }));
       } catch {
-        setGlobalSearchResults([]);
-        setGlobalSearchError('Could not search users right now');
+        setGlobalSearchError('Failed to send request');
       } finally {
-        setGlobalSearching(false);
+        setGlobalSendingTo('');
       }
-    }, 260);
-    return () => window.clearTimeout(timeout);
-  }, [globalSearch, token, user, makeHeaders]);
+    },
+    [globalRequestedIds, users, makeHeaders, setGlobalSearchError, setGlobalRequestedIds]
+  );
 
-  async function sendGlobalFriendRequest(to: string) {
-    if (globalRequestedIds[to] || users.some((u) => u.id === to)) return;
-    setGlobalSendingTo(to);
-    setGlobalSearchError('');
-    try {
-      const res = await fetch(`${API}/friend-requests`, {
-        method: 'POST',
-        headers: makeHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ to }),
-      });
-      const data = await res.json();
-      if (!res.ok || data?.error) {
-        setGlobalSearchError(data?.error || 'Failed to send request');
-        return;
+  const acceptGlobalRequest = useCallback(
+    async (id: string) => {
+      try {
+        const res = await fetch(`${API}/friend-requests/${id}/accept`, {
+          method: 'POST',
+          headers: makeHeaders(),
+        });
+        if (!res.ok) return;
+        setGlobalRequests((prev) => prev.filter((r) => r.id !== id));
+        await refreshHomeData();
+      } catch {
+        // ignore
       }
-      setGlobalRequestedIds((prev) => ({ ...prev, [to]: true }));
-    } catch {
-      setGlobalSearchError('Failed to send request');
-    } finally {
-      setGlobalSendingTo('');
-    }
-  }
+    },
+    [makeHeaders, setGlobalRequests, refreshHomeData]
+  );
 
-  async function acceptGlobalRequest(id: string) {
-    try {
-      const res = await fetch(`${API}/friend-requests/${id}/accept`, {
-        method: 'POST',
-        headers: makeHeaders(),
-      });
-      if (!res.ok) return;
-      setGlobalRequests((prev) => prev.filter((r) => r.id !== id));
-      await refreshHomeData();
-    } catch {
-      // ignore
-    }
-  }
-
-  async function rejectGlobalRequest(id: string) {
-    try {
-      const res = await fetch(`${API}/friend-requests/${id}`, {
-        method: 'DELETE',
-        headers: makeHeaders(),
-      });
-      if (!res.ok) return;
-      setGlobalRequests((prev) => prev.filter((r) => r.id !== id));
-    } catch {
-      // ignore
-    }
-  }
-
-  function activityText(item: AppNotification) {
-    const actor = item.actor?.username || 'Someone';
-    if (item.type === 'friend_request_received') return `${actor} sent you a friend request`;
-    if (item.type === 'friend_request_accepted') return `${actor} accepted your request`;
-    if (item.type === 'post_liked') return `${actor} liked your post`;
-    if (item.type === 'post_commented') return `${actor} commented on your post`;
-    return `${actor} sent an update`;
-  }
+  const rejectGlobalRequest = useCallback(
+    async (id: string) => {
+      try {
+        const res = await fetch(`${API}/friend-requests/${id}`, {
+          method: 'DELETE',
+          headers: makeHeaders(),
+        });
+        if (!res.ok) return;
+        setGlobalRequests((prev) => prev.filter((r) => r.id !== id));
+      } catch {
+        // ignore
+      }
+    },
+    [makeHeaders, setGlobalRequests]
+  );
 
   async function onAddMember(e: FormEvent<HTMLFormElement>) {
     const updated = await handleAddMember(e, selectedGroup);
@@ -421,15 +201,6 @@ export default function App() {
     if (updated) setSelectedGroup(updated);
   }
 
-  function leaveChat() {
-    setRoomId('');
-    setRoomLabel('');
-    setSelectedGroup(null);
-    clearMessages();
-    clearGroupInputs();
-    navigate('/');
-  }
-
   async function handleLogout() {
     await logout(makeHeaders);
     setRoomId('');
@@ -437,28 +208,8 @@ export default function App() {
     setSelectedGroup(null);
     clearMessages();
     clearGroupInputs();
-    setIncomingCall(null);
+    clearIncomingCall();
     navigate('/');
-  }
-
-  function acceptIncomingCall() {
-    if (!incomingCall?.roomId) return;
-    callNotifySocketRef.current?.emit('call_accept', { roomId: incomingCall.roomId });
-    navigate(`/call/${encodeURIComponent(incomingCall.roomId)}`);
-    setIncomingCall(null);
-  }
-
-  function rejectIncomingCall() {
-    if (!incomingCall?.roomId) return;
-    callNotifySocketRef.current?.emit('call_reject', { roomId: incomingCall.roomId });
-    setIncomingCall(null);
-  }
-
-  function startCall(roomIdToCall: string) {
-    if (!roomIdToCall) return;
-    setIncomingCall(null);
-    callNotifySocketRef.current?.emit('call_invite', { roomId: roomIdToCall });
-    navigate(`/call/${encodeURIComponent(roomIdToCall)}`);
   }
 
   if (!user) {
@@ -486,71 +237,40 @@ export default function App() {
     );
   }
 
+  const messagesPageProps = {
+    user,
+    roomLabel,
+    roomId,
+    selectedGroup,
+    onlineUserIds,
+    isGroupAdmin,
+    memberUsername,
+    setMemberUsername: (value: string) => setMemberUsername(value),
+    onAddMember,
+    onRemoveMember,
+    messages,
+    input,
+    setInput: (value: string) => setInput(value),
+    onSend: handleSend,
+    onSendMedia: sendMediaMessage,
+    sendingMedia,
+    onLeaveChat: leaveChat,
+    onStartCall: () => startCall(roomId),
+    messagesEndRef,
+  };
+
   return (
     <div className="app-shell">
       <Routes>
-        <Route
-          path="/home"
-          element={
-            <HomePage
-            user={user}
-             makeHeaders={makeHeaders}
-            />
-          }
-        />
-        <Route
-          path="/messages"
-          element={<MessagesInboxPage users={users} groups={groups} />}
-        />
+        <Route path="/home" element={<HomePage user={user} makeHeaders={makeHeaders} />} />
+        <Route path="/messages" element={<MessagesInboxPage users={users} groups={groups} onlineUserIds={onlineUserIds} />} />
         <Route
           path="/messages/:targetId"
-          element={
-            <MessagesPage
-              user={user}
-              roomLabel={roomLabel}
-              roomId={roomId}
-              selectedGroup={selectedGroup}
-              isGroupAdmin={isGroupAdmin}
-              memberUsername={memberUsername}
-              setMemberUsername={(value) => setMemberUsername(value)}
-              onAddMember={onAddMember}
-              onRemoveMember={onRemoveMember}
-              messages={messages}
-              input={input}
-              setInput={(value) => setInput(value)}
-              onSend={handleSend}
-              onSendMedia={sendMediaMessage}
-              sendingMedia={sendingMedia}
-              onLeaveChat={leaveChat}
-              onStartCall={() => startCall(roomId)}
-              messagesEndRef={messagesEndRef}
-            />
-          }
+          element={<MessagesPage {...messagesPageProps} />}
         />
         <Route
           path="/messages/group/:groupId"
-          element={
-            <MessagesPage
-              user={user}
-              roomLabel={roomLabel}
-              roomId={roomId}
-              selectedGroup={selectedGroup}
-              isGroupAdmin={isGroupAdmin}
-              memberUsername={memberUsername}
-              setMemberUsername={(value) => setMemberUsername(value)}
-              onAddMember={onAddMember}
-              onRemoveMember={onRemoveMember}
-              messages={messages}
-              input={input}
-              setInput={(value) => setInput(value)}
-              onSend={handleSend}
-              onSendMedia={sendMediaMessage}
-              sendingMedia={sendingMedia}
-              onLeaveChat={leaveChat}
-              onStartCall={() => startCall(roomId)}
-              messagesEndRef={messagesEndRef}
-            />
-          }
+          element={<MessagesPage {...messagesPageProps} />}
         />
         <Route path="/feed" element={<FeedPage makeHeaders={makeHeaders} />} />
         <Route
@@ -563,186 +283,43 @@ export default function App() {
           }
         />
         <Route path="/requests" element={<RequestsPage makeHeaders={makeHeaders} />} />
-        <Route
-          path="/profile"
-          element={<ProfilePage user={user} onLogout={handleLogout} makeHeaders={makeHeaders} />}
-        />
+        <Route path="/profile" element={<ProfilePage user={user} onLogout={handleLogout} makeHeaders={makeHeaders} />} />
         <Route path="/call/:callRoomId" element={<CallPage token={token} user={user} users={users} />} />
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
+
       {incomingCall && (
-        <div className="incoming-call-banner">
-          <div>
-            <strong>{incomingCall.from?.username || 'Someone'}</strong> is calling...
-          </div>
-          <div className="incoming-call-actions">
-            <button type="button" onClick={acceptIncomingCall}>
-              Accept
-            </button>
-            <button type="button" className="danger-btn" onClick={rejectIncomingCall}>
-              Reject
-            </button>
-          </div>
-        </div>
+        <IncomingCallBanner
+          incomingCall={incomingCall}
+          onAccept={acceptIncomingCall}
+          onReject={rejectIncomingCall}
+        />
       )}
+
       {showGlobalTopTools && (
-        <div className="global-top-tools">
-          <div className="inbox-top-actions">
-            <button
-              type="button"
-              className="icon-btn"
-              onClick={() => {
-                setGlobalSearchOpen((prev) => !prev);
-                setGlobalActivityOpen(false);
-              }}
-              aria-label="Toggle user search"
-              aria-pressed={globalSearchOpen}
-              title="Search users"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M10.5 4a6.5 6.5 0 0 1 5.17 10.45l4.44 4.44-1.41 1.41-4.44-4.44A6.5 6.5 0 1 1 10.5 4Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z"
-                  fill="currentColor"
-                />
-              </svg>
-              <span className="sr-only">Search</span>
-            </button>
-            <button
-              type="button"
-              className="icon-btn"
-              onClick={() => {
-                setGlobalActivityOpen((prev) => !prev);
-                setGlobalSearchOpen(false);
-              }}
-              aria-label="Toggle activity"
-              aria-pressed={globalActivityOpen}
-              title="Activity"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M12 3a6 6 0 0 1 6 6v2.76l1.45 2.9c.33.66-.15 1.44-.89 1.44H5.44c-.74 0-1.22-.78-.89-1.44L6 11.76V9a6 6 0 0 1 6-6Zm2 15a2 2 0 0 1-4 0h4Z"
-                  fill="currentColor"
-                />
-              </svg>
-              <span className="sr-only">Activity</span>
-              {(notificationsUnread > 0 || globalRequests.length > 0) && (
-                <span className="icon-btn-badge">{notificationsUnread + globalRequests.length}</span>
-              )}
-            </button>
-          </div>
-          {globalSearchOpen && (
-            <section className="home-card global-popover">
-              <div className="user-search-head">
-                <h2>Search users</h2>
-                <small>Send a friend request</small>
-              </div>
-              <div className="user-search-input-wrap">
-                <span className="user-search-icon" aria-hidden>
-                  #
-                </span>
-                <input
-                  type="text"
-                  value={globalSearch}
-                  onChange={(e) => setGlobalSearch(e.target.value)}
-                  placeholder="Type username..."
-                  className="user-search-input"
-                />
-                {globalSearch && (
-                  <button type="button" className="user-search-clear" onClick={() => setGlobalSearch('')}>
-                    Clear
-                  </button>
-                )}
-              </div>
-              {globalSearch.trim().length < 2 ? (
-                <p className="users-empty">Enter at least 2 letters</p>
-              ) : globalSearching ? (
-                <p className="users-empty">Searching...</p>
-              ) : (
-                <ul className="search-results-list">
-                  {globalSearchResults.length === 0 && <li className="users-empty">No matching users</li>}
-                  {globalSearchResults.map((u) => (
-                    <li key={u.id} className="search-result-row">
-                      <span className="request-user">
-                        <Avatar label={u.username} src={u.avatarUrl} />
-                        <span className="list-item-main">
-                          <strong>{u.username}</strong>
-                          <small>@{u.username}</small>
-                        </span>
-                      </span>
-                      {(() => {
-                        const isFriend = users.some((friend) => friend.id === u.id);
-                        const isRequested = Boolean(globalRequestedIds[u.id]);
-                        const isSending = globalSendingTo === u.id;
-                        const disabled = isFriend || isRequested || isSending;
-                        const label = isFriend ? 'Friends' : isRequested ? 'Requested' : isSending ? 'Sending...' : 'Add';
-                        return (
-                          <button
-                            type="button"
-                            className={`search-add-btn${isFriend || isRequested ? ' sent' : ''}`}
-                            onClick={() => sendGlobalFriendRequest(u.id)}
-                            disabled={disabled}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })()}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {globalSearchError && <p className="home-error">{globalSearchError}</p>}
-            </section>
-          )}
-          {globalActivityOpen && (
-            <section className="home-card global-popover">
-              <div className="user-search-head">
-                <h2>Activity</h2>
-                <small>{notificationsUnread} unread notifications</small>
-              </div>
-              <h3 className="global-popover-title">Friend Requests</h3>
-              <ul className="search-results-list">
-                {globalRequests.length === 0 && <li className="users-empty">No pending requests</li>}
-                {globalRequests.slice(0, 4).map((r) => (
-                  <li key={r.id} className="search-result-row">
-                    <span className="request-user">
-                      <Avatar label={r.from.username} src={r.from.avatarUrl} />
-                      <span className="list-item-main">
-                        <strong>{r.from.username}</strong>
-                        <small>Requested you</small>
-                      </span>
-                    </span>
-                    <span className="request-actions">
-                      <button type="button" onClick={() => acceptGlobalRequest(r.id)}>
-                        Accept
-                      </button>
-                      <button type="button" className="danger-btn" onClick={() => rejectGlobalRequest(r.id)}>
-                        Reject
-                      </button>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <h3 className="global-popover-title">Notifications</h3>
-              <ul className="search-results-list">
-                {globalNotifications.length === 0 && <li className="users-empty">No recent notifications</li>}
-                {globalNotifications.map((item) => (
-                  <li key={item.id} className={`search-result-row${item.read ? '' : ' unread'}`}>
-                    <span className="request-user">
-                      <Avatar label={item.actor?.username || 'U'} src={item.actor?.avatarUrl} />
-                      <span className="list-item-main">
-                        <strong>{activityText(item)}</strong>
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-        </div>
+        <GlobalTopTools
+          globalSearchOpen={globalSearchOpen}
+          setGlobalSearchOpen={setGlobalSearchOpen}
+          globalActivityOpen={globalActivityOpen}
+          setGlobalActivityOpen={setGlobalActivityOpen}
+          globalSearch={globalSearch}
+          setGlobalSearch={setGlobalSearch}
+          globalSearching={globalSearching}
+          globalSearchResults={globalSearchResults}
+          globalSearchError={globalSearchError}
+          globalSendingTo={globalSendingTo}
+          sendGlobalFriendRequest={sendGlobalFriendRequest}
+          users={users}
+          globalRequestedIds={globalRequestedIds}
+          notificationsUnread={notificationsUnread}
+          globalNotifications={globalNotifications}
+          globalRequests={globalRequests}
+          acceptGlobalRequest={acceptGlobalRequest}
+          rejectGlobalRequest={rejectGlobalRequest}
+        />
       )}
-      {!location.pathname.startsWith('/call/') && (
-        <BottomNav />
-      )}
+
+      {!location.pathname.startsWith('/call/') && <BottomNav />}
     </div>
   );
 }
