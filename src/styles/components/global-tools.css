@@ -91,6 +91,14 @@
     @apply inline-flex items-center gap-2.5;
   }
 
+  .search-result-clickable {
+    @apply cursor-pointer;
+  }
+
+  .search-result-clickable:hover {
+    @apply opacity-90;
+  }
+
   .request-actions {
     @apply inline-flex items-center gap-2;
   }

@@ -15,8 +15,7 @@
     }
 
     .chat-view {
-      height: calc(100vh - 64px - env(safe-area-inset-bottom));
-      max-height: calc(100vh - 64px - env(safe-area-inset-bottom));
+      @apply min-h-0 flex-1;
     }
 
     .chat-header {

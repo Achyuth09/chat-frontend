@@ -5,6 +5,10 @@
     padding-bottom: calc(68px + env(safe-area-inset-bottom));
   }
 
+  .app-main {
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+  }
+
   .home-view {
     @apply flex flex-col overflow-hidden;
     justify-content: flex-start;

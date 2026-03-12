@@ -86,24 +86,17 @@ export default function ProfilePage({ user, onLogout, makeHeaders }: ProfilePage
   return (
     <div className="app home-view">
       <div className="home-feed home-feed-scroll profile-feed">
-        <section className="home-card profile-hero">
+        <section className="profile-hero">
           <div className="profile-main">
             <span className="profile-avatar-wrap">
               <Avatar label={user.username} src={avatarUrl} size="lg" />
             </span>
             <div className="profile-head-text">
               <h2>{user.username}</h2>
-              <p>@{user.username.toLowerCase()}</p>
-            </div>
-          </div>
-          <div className="profile-meta">
-            <div className="profile-chip">
-              <strong>{posts.length}</strong>
-              <span>Posts</span>
-            </div>
-            <div className="profile-chip">
-              <strong>Active</strong>
-              <span>Status</span>
+              <p className="profile-handle">@{user.username.toLowerCase()}</p>
+              <div className="profile-stats">
+                <span><strong>{posts.length}</strong> posts</span>
+              </div>
             </div>
           </div>
           <div className="profile-actions">
@@ -121,14 +114,17 @@ export default function ProfilePage({ user, onLogout, makeHeaders }: ProfilePage
           </div>
           {error && <p className="home-error">{error}</p>}
         </section>
-        <section className="home-card profile-posts-head">
-          <h2>My Posts</h2>
-          <small>Only you can manage and review your posts here.</small>
-          {posts.length === 0 && <p className="users-empty">No posts yet.</p>}
-        </section>
-        {posts.map((post) => (
-          <PostCard key={post.id} post={post} onToggleLike={toggleLike} onAddComment={addComment} />
-        ))}
+        {posts.length === 0 ? (
+          <section className="profile-empty">
+            <p className="users-empty">No posts yet.</p>
+          </section>
+        ) : (
+          posts.map((post) => (
+            <section key={post.id} className="post-card-container">
+              <PostCard post={post} onToggleLike={toggleLike} onAddComment={addComment} />
+            </section>
+          ))
+        )}
       </div>
     </div>
   );

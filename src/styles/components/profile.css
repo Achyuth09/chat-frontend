@@ -1,39 +1,39 @@
 @layer components {
   .profile-feed {
-    @apply gap-3.5;
+    @apply flex flex-col gap-4;
   }
 
   .profile-hero {
-    @apply grid gap-4;
+    @apply relative flex flex-col gap-4 rounded-xl border border-[var(--border)] bg-white px-4 py-5;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 
   .profile-main {
-    @apply flex items-center gap-4;
+    @apply flex items-start gap-5;
+  }
+
+  .profile-avatar-wrap {
+    @apply flex-shrink-0;
+  }
+
+  .profile-head-text {
+    @apply flex min-w-0 flex-1 flex-col gap-0.5;
   }
 
   .profile-head-text h2 {
-    @apply m-0;
+    @apply m-0 text-xl font-semibold text-[var(--text)];
   }
 
-  .profile-head-text p {
-    @apply mt-1 m-0 text-[var(--text-muted)];
+  .profile-handle {
+    @apply m-0 text-sm text-[var(--text-muted)];
   }
 
-  .profile-meta {
-    @apply flex flex-wrap gap-2;
+  .profile-stats {
+    @apply mt-2 flex gap-4 text-sm text-[var(--text)];
   }
 
-  .profile-chip {
-    @apply grid min-w-[92px] gap-0.5 rounded-xl border border-[var(--border)] px-2.5 py-2;
-    background: rgba(17, 23, 40, 0.64);
-  }
-
-  .profile-chip strong {
-    @apply text-[0.95rem];
-  }
-
-  .profile-chip span {
-    @apply text-[0.75rem] text-[var(--text-muted)];
+  .profile-stats strong {
+    @apply mr-1 font-semibold;
   }
 
   .profile-actions {
@@ -41,10 +41,9 @@
   }
 
   .profile-upload-btn {
-    @apply m-0 min-w-[150px] max-w-none rounded-xl border-0 px-4 py-2.5 font-semibold text-white;
+    @apply m-0 min-w-[140px] max-w-none cursor-pointer rounded-lg border-0 px-4 py-2.5 text-sm font-semibold text-white;
     background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
-    box-shadow: 0 10px 20px rgba(56, 189, 248, 0.28);
-    transition: transform 0.14s ease, filter 0.2s ease;
+    transition: filter 0.2s ease, transform 0.1s ease;
   }
 
   .profile-upload-btn:hover {
@@ -52,29 +51,32 @@
   }
 
   .profile-upload-btn:active {
-    transform: translateY(1px) scale(0.98);
+    transform: scale(0.98);
   }
 
   .profile-logout {
-    @apply m-0 min-w-[150px] rounded-xl border-0 px-4 py-2.5 font-semibold text-white;
-    background: linear-gradient(135deg, #f43f5e 0%, #ef4444 100%);
-    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.28);
-    transition: transform 0.14s ease, filter 0.2s ease;
+    @apply m-0 min-w-[140px] cursor-pointer rounded-lg border border-[var(--border)] bg-transparent px-4 py-2.5 text-sm font-semibold text-[var(--text)];
+    transition: background 0.2s ease, transform 0.1s ease;
   }
 
   .profile-logout:hover {
-    filter: brightness(1.05);
+    @apply bg-[var(--bg-deep)];
   }
 
   .profile-logout:active {
-    transform: translateY(1px) scale(0.98);
+    transform: scale(0.98);
   }
 
-  .profile-posts-head {
-    @apply grid gap-1;
+  .profile-back {
+    @apply absolute left-4 top-4 rounded-lg border-0 bg-transparent px-2 py-1.5 text-lg text-[var(--text)];
   }
 
-  .profile-posts-head small {
-    @apply text-[var(--text-muted)];
+  .profile-back:hover {
+    @apply bg-[var(--bg-deep)];
+  }
+
+  .profile-empty {
+    @apply rounded-xl border border-[var(--border)] bg-white px-4 py-8 text-center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 }

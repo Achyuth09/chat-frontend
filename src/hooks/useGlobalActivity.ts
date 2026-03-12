@@ -8,9 +8,10 @@ interface UseGlobalActivityArgs {
   token: string | null;
   user: { id: string } | null;
   makeHeaders: (extra?: Record<string, string>) => Record<string, string>;
+  refreshHomeData?: () => Promise<void>;
 }
 
-export function useGlobalActivity({ socket, token, user, makeHeaders }: UseGlobalActivityArgs) {
+export function useGlobalActivity({ socket, token, user, makeHeaders, refreshHomeData }: UseGlobalActivityArgs) {
   const [notificationsUnread, setNotificationsUnread] = useState(0);
   const [globalNotifications, setGlobalNotifications] = useState<AppNotification[]>([]);
   const [globalRequests, setGlobalRequests] = useState<FriendRequest[]>([]);
@@ -42,10 +43,11 @@ export function useGlobalActivity({ socket, token, user, makeHeaders }: UseGloba
           return acc;
         }, {})
       );
+      await refreshHomeData?.();
     } catch {
       // ignore
     }
-  }, [token, user, makeHeaders]);
+  }, [token, user?.id, makeHeaders, refreshHomeData]);
 
   const fetchUnread = useCallback(async () => {
     if (!token || !user) return;
@@ -80,6 +82,25 @@ export function useGlobalActivity({ socket, token, user, makeHeaders }: UseGloba
     };
   }, [socket, loadActivitySummary, fetchUnread]);
 
+  const markNotificationRead = useCallback(
+    async (id: string) => {
+      if (!token || !user) return;
+      try {
+        await fetch(`${API}/notifications/${id}/read`, {
+          method: 'POST',
+          headers: makeHeaders(),
+        });
+        setGlobalNotifications((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+        );
+        await fetchUnread();
+      } catch {
+        // ignore
+      }
+    },
+    [token, user, makeHeaders, fetchUnread]
+  );
+
   return {
     notificationsUnread,
     setNotificationsUnread,
@@ -88,5 +109,7 @@ export function useGlobalActivity({ socket, token, user, makeHeaders }: UseGloba
     globalRequestedIds,
     setGlobalRequestedIds,
     setGlobalRequests,
+    loadActivitySummary,
+    markNotificationRead,
   };
 }

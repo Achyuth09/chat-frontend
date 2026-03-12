@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { API } from '../lib/config';
 import type { ChatUser, Group } from '../types';
@@ -16,11 +16,11 @@ export function useGroups({ token, user, makeHeaders }: UseGroupsArgs) {
   const [newGroupName, setNewGroupName] = useState('');
   const [memberUsername, setMemberUsername] = useState('');
 
-  async function refreshHomeData(activeToken = token, activeUser = user) {
-    if (!activeToken || !activeUser) return;
+  const refreshHomeData = useCallback(async () => {
+    if (!token || !user) return;
     setHomeError('');
     try {
-      const headers = { Authorization: `Bearer ${activeToken}` };
+      const headers = { Authorization: `Bearer ${token}` };
       const [usersRes, groupsRes] = await Promise.all([
         fetch(`${API}/users`, { headers }),
         fetch(`${API}/groups`, { headers }),
@@ -31,12 +31,12 @@ export function useGroups({ token, user, makeHeaders }: UseGroupsArgs) {
     } catch {
       setHomeError('Could not load users/groups');
     }
-  }
+  }, [token, user]);
 
   useEffect(() => {
     if (!token || !user) return;
     refreshHomeData();
-  }, [token, user]);
+  }, [token, user, refreshHomeData]);
 
   async function handleCreateGroup(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();

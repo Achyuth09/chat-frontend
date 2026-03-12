@@ -74,7 +74,7 @@ export default function HomePage({
       </header>
       <div className="home-feed home-feed-scroll">
         {posts.map((post) => (
-          <section key={post.id} className="home-card">
+          <section key={post.id} className="post-card-container">
             <PostCard post={post} onToggleLike={toggleLike} onAddComment={addComment} />
           </section>
         ))}

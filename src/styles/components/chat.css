@@ -1,8 +1,6 @@
 @layer components {
   .chat-view {
-    @apply flex w-full min-w-0 flex-col overflow-hidden p-0;
-    height: calc(100vh - 68px);
-    max-height: calc(100vh - 68px);
+    @apply flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden p-0;
     justify-content: stretch;
     background: var(--bg-surface);
   }
@@ -31,8 +29,16 @@
     background: var(--bg-surface);
   }
 
+  .chat-header-name-wrap {
+    @apply flex min-w-0 flex-1 flex-col gap-0.5;
+  }
+
   .chat-header .room-name {
     @apply text-xl font-bold tracking-tight;
+  }
+
+  .chat-header .chat-status {
+    @apply text-xs font-medium text-emerald-600;
   }
 
   .chat-header .you {
@@ -162,6 +168,14 @@
 
   .inline-form {
     @apply flex gap-2;
+  }
+
+  .create-group-form {
+    @apply mb-3 mt-2;
+  }
+
+  .create-group-input {
+    @apply min-w-0;
   }
 
   .inline-form input {

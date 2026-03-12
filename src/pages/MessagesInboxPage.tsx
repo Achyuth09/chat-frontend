@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import Avatar from '../components/Avatar';
 import type { ChatUser, Group } from '../types';
@@ -6,9 +7,21 @@ interface MessagesInboxPageProps {
   users: ChatUser[];
   groups: Group[];
   onlineUserIds: Set<string>;
+  newGroupName: string;
+  setNewGroupName: (value: string) => void;
+  onCreateGroup: (e: FormEvent<HTMLFormElement>) => void;
+  homeError?: string;
 }
 
-export default function MessagesInboxPage({ users, groups, onlineUserIds }: MessagesInboxPageProps) {
+export default function MessagesInboxPage({
+  users,
+  groups,
+  onlineUserIds,
+  newGroupName,
+  setNewGroupName,
+  onCreateGroup,
+  homeError,
+}: MessagesInboxPageProps) {
   return (
     <div className="app home-view">
       <header className="home-header page-header">
@@ -19,6 +32,17 @@ export default function MessagesInboxPage({ users, groups, onlineUserIds }: Mess
       <div className="home-feed home-feed-scroll messages-home-feed">
         <section className="home-card">
           <h2>Groups</h2>
+          <form onSubmit={onCreateGroup} className="inline-form create-group-form">
+            <input
+              type="text"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              placeholder="Create a new group..."
+              className="create-group-input"
+            />
+            <button type="submit">Create</button>
+          </form>
+          {homeError && <p className="home-error">{homeError}</p>}
           <ul className="users-list">
             {groups.length === 0 && <li className="users-empty">No groups yet</li>}
             {groups.map((g) => (
@@ -34,7 +58,7 @@ export default function MessagesInboxPage({ users, groups, onlineUserIds }: Mess
           </ul>
         </section>
         <section className="home-card">
-          <h2>Direct Messages</h2>
+          <h2>Messages</h2>
           <p className="users-empty">Only accepted friends appear here</p>
           <ul className="users-list">
             {users.length === 0 && <li className="users-empty">No friends yet</li>}

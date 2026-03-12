@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import Avatar from './Avatar';
 import type { AppNotification, ChatUser, FriendRequest } from '../types';
 
@@ -29,6 +30,8 @@ interface GlobalTopToolsProps {
   globalRequests: FriendRequest[];
   acceptGlobalRequest: (id: string) => Promise<void>;
   rejectGlobalRequest: (id: string) => Promise<void>;
+  onMarkNotificationRead?: (id: string) => Promise<void>;
+  onRefreshActivity?: () => void;
 }
 
 export default function GlobalTopTools({
@@ -50,7 +53,18 @@ export default function GlobalTopTools({
   globalRequests,
   acceptGlobalRequest,
   rejectGlobalRequest,
+  onMarkNotificationRead,
+  onRefreshActivity,
 }: GlobalTopToolsProps) {
+  const navigate = useNavigate();
+
+  async function handleNotificationClick(item: AppNotification) {
+    const actorId = item.actor?.id;
+    if (actorId) navigate(`/profile/${actorId}`);
+    if (!item.read && onMarkNotificationRead) await onMarkNotificationRead(item.id);
+    onRefreshActivity?.();
+  }
+
   return (
     <div className="global-top-tools">
       <div className="inbox-top-actions">
@@ -134,7 +148,13 @@ export default function GlobalTopTools({
                 const label = isFriend ? 'Friends' : isRequested ? 'Requested' : isSending ? 'Sending...' : 'Add';
                 return (
                   <li key={u.id} className="search-result-row">
-                    <span className="request-user">
+                    <span
+                      className="request-user search-result-clickable"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => navigate(`/profile/${u.id}`)}
+                      onKeyDown={(e) => e.key === 'Enter' && navigate(`/profile/${u.id}`)}
+                    >
                       <Avatar label={u.username} src={u.avatarUrl} />
                       <span className="list-item-main">
                         <strong>{u.username}</strong>
@@ -168,7 +188,13 @@ export default function GlobalTopTools({
             {globalRequests.length === 0 && <li className="users-empty">No pending requests</li>}
             {globalRequests.slice(0, 4).map((r) => (
               <li key={r.id} className="search-result-row">
-                <span className="request-user">
+                <span
+                  className="request-user search-result-clickable"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/profile/${r.from.id}`)}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/profile/${r.from.id}`)}
+                >
                   <Avatar label={r.from.username} src={r.from.avatarUrl} />
                   <span className="list-item-main">
                     <strong>{r.from.username}</strong>
@@ -191,7 +217,13 @@ export default function GlobalTopTools({
             {globalNotifications.length === 0 && <li className="users-empty">No recent notifications</li>}
             {globalNotifications.map((item) => (
               <li key={item.id} className={`search-result-row${item.read ? '' : ' unread'}`}>
-                <span className="request-user">
+                <span
+                  className="request-user search-result-clickable"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleNotificationClick(item)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleNotificationClick(item)}
+                >
                   <Avatar label={item.actor?.username || 'U'} src={item.actor?.avatarUrl} />
                   <span className="list-item-main">
                     <strong>{activityText(item)}</strong>

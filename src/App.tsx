@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import MessagesPage from './pages/MessagesPage';
 import RequestsPage from './pages/RequestsPage';
 import ProfilePage from './pages/ProfilePage';
+import UserProfilePage from './pages/UserProfilePage';
 import FeedPage from './pages/FeedPage';
 import CallPage from './pages/CallPage';
 import MessagesInboxPage from './pages/MessagesInboxPage';
@@ -53,6 +54,10 @@ export default function App() {
   const {
     users,
     groups,
+    newGroupName,
+    setNewGroupName,
+    handleCreateGroup,
+    homeError,
     memberUsername,
     setMemberUsername,
     handleAddMember,
@@ -91,7 +96,7 @@ export default function App() {
 
   useCallRingtone({ incomingCall });
 
-  const { leaveChat } = useRoomSync({
+  const { leaveChat, openDm } = useRoomSync({
     user,
     users,
     groups,
@@ -110,7 +115,9 @@ export default function App() {
     globalRequestedIds,
     setGlobalRequestedIds,
     setGlobalRequests,
-  } = useGlobalActivity({ socket, token, user, makeHeaders });
+    loadActivitySummary,
+    markNotificationRead,
+  } = useGlobalActivity({ socket, token, user, makeHeaders, refreshHomeData });
 
   const { onlineUserIds } = useOnlineUsers(socket);
 
@@ -261,9 +268,23 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Routes>
+      <main className="app-main">
+        <Routes>
         <Route path="/home" element={<HomePage user={user} makeHeaders={makeHeaders} />} />
-        <Route path="/messages" element={<MessagesInboxPage users={users} groups={groups} onlineUserIds={onlineUserIds} />} />
+        <Route
+          path="/messages"
+          element={
+            <MessagesInboxPage
+              users={users}
+              groups={groups}
+              onlineUserIds={onlineUserIds}
+              newGroupName={newGroupName}
+              setNewGroupName={setNewGroupName}
+              onCreateGroup={handleCreateGroup}
+              homeError={homeError}
+            />
+          }
+        />
         <Route
           path="/messages/:targetId"
           element={<MessagesPage {...messagesPageProps} />}
@@ -284,9 +305,20 @@ export default function App() {
         />
         <Route path="/requests" element={<RequestsPage makeHeaders={makeHeaders} />} />
         <Route path="/profile" element={<ProfilePage user={user} onLogout={handleLogout} makeHeaders={makeHeaders} />} />
+        <Route
+          path="/profile/:userId"
+          element={
+            <UserProfilePage
+              currentUser={user}
+              makeHeaders={makeHeaders}
+              onOpenChat={(u) => openDm(u)}
+            />
+          }
+        />
         <Route path="/call/:callRoomId" element={<CallPage token={token} user={user} users={users} />} />
         <Route path="*" element={<Navigate to="/home" replace />} />
-      </Routes>
+        </Routes>
+      </main>
 
       {incomingCall && (
         <IncomingCallBanner
@@ -316,6 +348,8 @@ export default function App() {
           globalRequests={globalRequests}
           acceptGlobalRequest={acceptGlobalRequest}
           rejectGlobalRequest={rejectGlobalRequest}
+          onMarkNotificationRead={markNotificationRead}
+          onRefreshActivity={loadActivitySummary}
         />
       )}
 

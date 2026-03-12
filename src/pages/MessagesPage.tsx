@@ -72,9 +72,10 @@ export default function MessagesPage({
           <Avatar label={roomLabel} />
           {isOtherOnline && <span className="online-dot" aria-label="Online" />}
         </span>
-        <span className="room-name">{roomLabel}</span>
-        {isOtherOnline && <span className="online-badge">Online</span>}
-        <span className="you">{user.username}</span>
+        <div className="chat-header-name-wrap">
+          <span className="room-name">{roomLabel}</span>
+          {isOtherOnline && <span className="chat-status">Active now</span>}
+        </div>
         {roomId && (
           <button type="button" className="call-btn" onClick={onStartCall}>
             Start Call

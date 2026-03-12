@@ -6,7 +6,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export default function BottomNav() {
   return (
     <nav className="bottom-nav">
-      <NavLink to="/" className={linkClass} end>
+      <NavLink to="/home" className={linkClass} end>
         <span className="nav-icon-wrap" aria-hidden="true">
           <svg viewBox="0 0 24 24">
             <path

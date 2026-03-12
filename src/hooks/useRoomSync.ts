@@ -90,7 +90,7 @@ export function useRoomSync({
     setSelectedGroup(null);
     clearMessages();
     clearGroupInputs();
-    navigate('/');
+    navigate(-1);
   }, [setRoomId, setRoomLabel, setSelectedGroup, clearMessages, clearGroupInputs, navigate]);
 
   return { openDm, openGroup, leaveChat };
