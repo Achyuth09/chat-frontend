@@ -15,10 +15,12 @@ export function useGroups({ token, user, makeHeaders }: UseGroupsArgs) {
   const [homeError, setHomeError] = useState('');
   const [newGroupName, setNewGroupName] = useState('');
   const [memberUsername, setMemberUsername] = useState('');
+  const [loadingGroups, setLoadingGroups] = useState(true);
 
   const refreshHomeData = useCallback(async () => {
     if (!token || !user) return;
     setHomeError('');
+    setLoadingGroups(true);
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const [usersRes, groupsRes] = await Promise.all([
@@ -30,6 +32,8 @@ export function useGroups({ token, user, makeHeaders }: UseGroupsArgs) {
       setGroups(Array.isArray(groupsData) ? (groupsData as Group[]) : []);
     } catch {
       setHomeError('Could not load users/groups');
+    } finally {
+      setLoadingGroups(false);
     }
   }, [token, user]);
 
@@ -120,5 +124,6 @@ export function useGroups({ token, user, makeHeaders }: UseGroupsArgs) {
     handleAddMember,
     removeMember,
     clearGroupInputs,
+    loadingGroups,
   };
 }

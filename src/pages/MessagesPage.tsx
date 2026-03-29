@@ -1,5 +1,6 @@
 import type { FormEvent, MutableRefObject } from 'react';
 import Avatar from '../components/Avatar';
+import Loader from '../components/Loader';
 import { getOtherUserIdFromDmRoom } from '../utils/chat';
 import type { ChatMessage, ChatUser, Group } from '../types';
 
@@ -23,6 +24,7 @@ interface MessagesPageProps {
   onLeaveChat: () => void;
   onStartCall: () => void;
   messagesEndRef: MutableRefObject<HTMLLIElement | null>;
+  loadingMessages?: boolean;
 }
 
 export default function MessagesPage({
@@ -45,6 +47,7 @@ export default function MessagesPage({
   onLeaveChat,
   onStartCall,
   messagesEndRef,
+  loadingMessages,
 }: MessagesPageProps) {
   if (!roomLabel) {
     return (
@@ -113,26 +116,34 @@ export default function MessagesPage({
       )}
 
       <ul className="message-list">
-        {messages.length === 0 && <li className="empty-hint">No messages yet. Say hi!</li>}
-        {messages.map((m) => (
-          <li key={m._id} className={m.sender === user.username ? 'msg you' : 'msg other'}>
-            <span className="sender">{m.sender}</span>
-            <span className="text">{m.text}</span>
-            {m.attachments?.map((a) =>
-              a.type === 'video' ? (
-                <video key={a.url} src={a.url} controls className="message-media" />
-              ) : a.type === 'image' ? (
-                <img key={a.url} src={a.url} alt={a.name || 'attachment'} className="message-media" />
-              ) : (
-                <a key={a.url} href={a.url} target="_blank" rel="noreferrer">
-                  {a.originalName || a.name || 'Open attachment'}
-                </a>
-              )
-            )}
-            {m.createdAt && <span className="time">{new Date(m.createdAt).toLocaleTimeString()}</span>}
-          </li>
-        ))}
-        <li ref={messagesEndRef} aria-hidden="true" />
+        {loadingMessages ? (
+          <div className="flex-1 flex justify-center items-center">
+            <Loader text="Loading history..." />
+          </div>
+        ) : (
+          <>
+            {messages.length === 0 && <li className="empty-hint">No messages yet. Say hi!</li>}
+            {messages.map((m) => (
+              <li key={m._id} className={m.sender === user.username ? 'msg you' : 'msg other'}>
+                <span className="sender">{m.sender}</span>
+                <span className="text">{m.text}</span>
+                {m.attachments?.map((a) =>
+                  a.type === 'video' ? (
+                    <video key={a.url} src={a.url} controls className="message-media" />
+                  ) : a.type === 'image' ? (
+                    <img key={a.url} src={a.url} alt={a.name || 'attachment'} className="message-media" />
+                  ) : (
+                    <a key={a.url} href={a.url} target="_blank" rel="noreferrer">
+                      {a.originalName || a.name || 'Open attachment'}
+                    </a>
+                  )
+                )}
+                {m.createdAt && <span className="time">{new Date(m.createdAt).toLocaleTimeString()}</span>}
+              </li>
+            ))}
+            <li ref={messagesEndRef} aria-hidden="true" />
+          </>
+        )}
       </ul>
       <form onSubmit={onSend} className="input-form">
         <input

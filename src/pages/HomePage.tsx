@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { API } from '../lib/config';
 import type { ChatUser, FeedPost } from '../types';
 import PostCard from '../components/feed/PostCard';
+import Loader from '../components/Loader';
 
 interface HomePageProps {
   makeHeaders: (extra?: Record<string, string>) => Record<string, string>;
@@ -16,15 +17,19 @@ export default function HomePage({
 
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   async function fetchFeed() {
     setError('');
+    setLoading(true);
     try {
       const res = await fetch(`${API}/posts`, { headers: makeHeaders() });
       const data = await res.json();
       setPosts(Array.isArray(data.items) ? (data.items as FeedPost[]) : []);
     } catch {
       setError('Failed to load feed');
+    } finally {
+      setLoading(false);
     }
   }
   async function toggleLike(postId: string) {
@@ -73,11 +78,15 @@ export default function HomePage({
         </div>
       </header>
       <div className="home-feed home-feed-scroll">
-        {posts.map((post) => (
-          <section key={post.id} className="post-card-container">
-            <PostCard post={post} onToggleLike={toggleLike} onAddComment={addComment} />
-          </section>
-        ))}
+        {loading ? (
+          <Loader text="Loading feed..." />
+        ) : (
+          posts.map((post) => (
+            <section key={post.id} className="post-card-container">
+              <PostCard post={post} onToggleLike={toggleLike} onAddComment={addComment} />
+            </section>
+          ))
+        )}
         {error && <p className="home-error">{error}</p>}
       </div>
     </div>

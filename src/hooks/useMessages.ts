@@ -16,6 +16,7 @@ export function useMessages({ token, user, inMessages, roomId, makeHeaders }: Us
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sendingMedia, setSendingMedia] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLLIElement | null>(null);
 
@@ -29,10 +30,12 @@ export function useMessages({ token, user, inMessages, roomId, makeHeaders }: Us
     socket.on('connect', joinRoom);
     if (socket.connected) joinRoom();
 
+    setLoadingMessages(true);
     fetch(`${API}/messages?roomId=${encodeURIComponent(roomId)}`, { headers: makeHeaders() })
       .then((res) => res.json())
       .then((data) => setMessages(Array.isArray(data) ? (data as ChatMessage[]) : []))
-      .catch(() => setMessages([]));
+      .catch(() => setMessages([]))
+      .finally(() => setLoadingMessages(false));
 
     socket.on('new_message', (message: ChatMessage) => setMessages((prev) => [...prev, message]));
 
@@ -105,5 +108,6 @@ export function useMessages({ token, user, inMessages, roomId, makeHeaders }: Us
     sendMediaMessage,
     sendingMedia,
     socketRef,
+    loadingMessages,
   };
 }

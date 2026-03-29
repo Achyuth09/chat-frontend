@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Avatar from '../components/Avatar';
 import PostCard from '../components/feed/PostCard';
+import Loader from '../components/Loader';
 import { API } from '../lib/config';
 import type { ChatUser, FeedPost } from '../types';
 
@@ -14,16 +15,19 @@ export default function ProfilePage({ user, onLogout, makeHeaders }: ProfilePage
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || '');
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setAvatarUrl(user.avatarUrl || '');
   }, [user.avatarUrl]);
 
   useEffect(() => {
+    setLoading(true);
     fetch(`${API}/posts/me`, { headers: makeHeaders() })
       .then((res) => res.json())
       .then((data) => setPosts(Array.isArray(data.items) ? (data.items as FeedPost[]) : []))
-      .catch(() => setPosts([]));
+      .catch(() => setPosts([]))
+      .finally(() => setLoading(false));
   }, [makeHeaders]);
 
   async function uploadAvatar(file: File | null) {
@@ -114,7 +118,9 @@ export default function ProfilePage({ user, onLogout, makeHeaders }: ProfilePage
           </div>
           {error && <p className="home-error">{error}</p>}
         </section>
-        {posts.length === 0 ? (
+        {loading ? (
+          <Loader text="Loading profile..." />
+        ) : posts.length === 0 ? (
           <section className="profile-empty">
             <p className="users-empty">No posts yet.</p>
           </section>

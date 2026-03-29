@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Avatar from '../components/Avatar';
+import Loader from '../components/Loader';
 import { API } from '../lib/config';
 import type { AppNotification } from '../types';
 
@@ -39,9 +40,11 @@ export default function NotificationsPage({ makeHeaders, onUnreadCountChange }: 
   const [items, setItems] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   async function loadNotifications() {
     setError('');
+    setLoading(true);
     try {
       const res = await fetch(`${API}/notifications`, { headers: makeHeaders() });
       const data = await res.json();
@@ -51,6 +54,8 @@ export default function NotificationsPage({ makeHeaders, onUnreadCountChange }: 
       onUnreadCountChange?.(nextUnread);
     } catch {
       setError('Failed to load notifications');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -86,31 +91,37 @@ export default function NotificationsPage({ makeHeaders, onUnreadCountChange }: 
               </button>
             </div>
           </div>
-          {items.length === 0 && <p className="users-empty">No notifications yet</p>}
-          <ul className="notifications-list">
-            {items.map((item) => (
-              <li key={item.id} className={`notification-row${item.read ? '' : ' unread'}`}>
-                <span className="request-user">
-                  <Avatar label={item.actor?.username || 'U'} src={item.actor?.avatarUrl} />
-                  <span className="notification-main">
-                    <strong>{messageFor(item)}</strong>
-                    <small>{timeAgo(item.createdAt)}</small>
-                  </span>
-                </span>
-                {item.type === 'friend_request_received' && (
-                  <Link to="/requests" className="list-link">
-                    Open requests
-                  </Link>
-                )}
-                {(item.type === 'post_liked' || item.type === 'post_commented') && (
-                  <Link to="/feed" className="list-link">
-                    Open feed
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-          {error && <p className="home-error">{error}</p>}
+          {loading ? (
+            <Loader text="Loading notifications..." />
+          ) : (
+            <>
+              {items.length === 0 && <p className="users-empty">No notifications yet</p>}
+              <ul className="notifications-list">
+                {items.map((item) => (
+                  <li key={item.id} className={`notification-row${item.read ? '' : ' unread'}`}>
+                    <span className="request-user">
+                      <Avatar label={item.actor?.username || 'U'} src={item.actor?.avatarUrl} />
+                      <span className="notification-main">
+                        <strong>{messageFor(item)}</strong>
+                        <small>{timeAgo(item.createdAt)}</small>
+                      </span>
+                    </span>
+                    {item.type === 'friend_request_received' && (
+                      <Link to="/requests" className="list-link">
+                        Open requests
+                      </Link>
+                    )}
+                    {(item.type === 'post_liked' || item.type === 'post_commented') && (
+                      <Link to="/feed" className="list-link">
+                        Open feed
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {error && <p className="home-error">{error}</p>}
+            </>
+          )}
         </section>
       </div>
     </div>

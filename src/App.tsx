@@ -64,6 +64,7 @@ export default function App() {
     removeMember,
     refreshHomeData,
     clearGroupInputs,
+    loadingGroups,
   } = useGroups({ token, user, makeHeaders });
 
   const {
@@ -75,6 +76,7 @@ export default function App() {
     clearMessages,
     sendMediaMessage,
     sendingMedia,
+    loadingMessages,
   } = useMessages({
     token,
     user,
@@ -261,6 +263,7 @@ export default function App() {
     onSend: handleSend,
     onSendMedia: sendMediaMessage,
     sendingMedia,
+    loadingMessages,
     onLeaveChat: leaveChat,
     onStartCall: () => startCall(roomId),
     messagesEndRef,
@@ -282,6 +285,7 @@ export default function App() {
               setNewGroupName={setNewGroupName}
               onCreateGroup={handleCreateGroup}
               homeError={homeError}
+              loadingGroups={loadingGroups}
             />
           }
         />

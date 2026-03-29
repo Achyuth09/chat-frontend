@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Avatar from '../components/Avatar';
 import PostCard from '../components/feed/PostCard';
+import Loader from '../components/Loader';
 import { API } from '../lib/config';
 import type { ChatUser, FeedPost } from '../types';
 
@@ -91,9 +92,7 @@ export default function UserProfilePage({ currentUser, makeHeaders, onOpenChat }
     return (
       <div className="app home-view">
         <div className="home-feed home-feed-scroll profile-feed">
-          <section className="profile-empty">
-            <p className="users-empty">Loading...</p>
-          </section>
+          <Loader text="Loading profile..." />
         </div>
       </div>
     );
