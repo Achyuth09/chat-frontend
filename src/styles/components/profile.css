@@ -4,7 +4,7 @@
   }
 
   .profile-hero {
-    @apply relative flex flex-col gap-4 rounded-xl border border-[var(--border)] bg-white px-4 py-5;
+    @apply relative flex flex-col gap-4 rounded-xl border border-[var(--border)] bg-white px-4 py-5 shrink-0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 

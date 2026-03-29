@@ -30,7 +30,7 @@
   }
 
   .home-feed {
-    @apply mx-auto grid w-full max-w-[760px] gap-4;
+    @apply mx-auto flex flex-col w-full max-w-[760px] gap-4;
     margin-top: 1.25rem;
   }
 
@@ -41,7 +41,7 @@
   }
 
   .home-card {
-    @apply rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4;
+    @apply rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4 shrink-0;
     box-shadow: var(--shadow-card);
     backdrop-filter: blur(12px);
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
